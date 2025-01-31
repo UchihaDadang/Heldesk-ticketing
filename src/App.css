@@ -1,0 +1,282 @@
+:root {
+    --primary-bg: bisque;
+    --secondary-bg: #FFFFF0;
+    --border-color: white;
+    --text-color: black;
+    --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease-in-out; 
+    --spacing-sm: 0.5rem;
+    --spacing-md: 0.8rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 3rem;
+  }
+
+html, body {
+    overflow: hidden;
+    height: 100%;
+  }
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+
+
+/* ------------------ */
+/* Login Box Styling */
+/* ------------------ */
+.login-box {
+    width: 30%;
+    height: 60%;
+    background-color: var(--primary-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease-in-out;
+}
+
+.btn-login {
+    background-color: #FFFFF0;
+    width: 100%;
+    height: 3rem;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+    box-shadow: var(--box-shadow);
+    transform: scale(1.05);
+    background-color: #FFFAE0;
+}
+
+/* ------------------ */
+/* Form Control Style */
+/* ------------------ */
+.form-control {
+    height: 3rem;
+    margin: 1.5rem 0;
+    border: none;
+    background-color: #FFFFF0;
+    padding: 0.5rem;
+    border-radius: 5px;
+    transition: all 0.3s ease-in-out;
+} */
+
+.form-control:hover,
+.form-control:focus {
+    box-shadow: var(--box-shadow);
+    transform: scale(1.02);
+    outline: none;
+}
+
+/* ------------------ */
+/* Minimize Button Styling */
+/* ------------------ */
+.btn-full,
+.btn-minimize {
+    position: absolute;
+    font-size: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+
+.btn-full {
+    top: 50%;
+    left: 96%;
+}
+
+.btn-minimize {
+    top: 0;
+    left: 0;
+    margin: 1rem;
+}
+
+.bi-minimize,
+.bi-full {
+    color: #E9F1FA;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 2rem;
+    margin: 0;
+    -webkit-text-stroke: 1px #00ABE4;
+    
+}
+
+.bi-minimize:hover,
+.bi-full:hover {
+    animation: rise 0.5s forwards;
+    color: #E9F1FA;
+    transform: scale(1.2);
+}
+
+/* ------------------ */
+/* Navbar & Logout Button Styling */
+/* ------------------ */
+.navbar {
+    transition: all 0.3s ease;
+    background-color: #00ABE4;
+    padding: 1rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+.minimize-bar {
+    width: 5%;
+    height: 100%;
+    transition: all 0.3s ease;
+    padding: 3rem;
+    position: static;
+    display: block;
+}
+
+.title, .title-full {
+    border: none;
+    height: 5rem;
+    border-bottom: 2px solid #E9F1FA;
+}
+
+.btn-logout {
+    background-color: #E9F1FA;
+    color: #00ABE4;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-logout:hover {
+    background-color: #E9F1FA ;
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow);
+    transform: scale(1.05);
+  }
+
+.bi-logout {
+    color: #E9F1FA;
+    transition: all 0.3s ease;
+}
+
+.bi-logout:hover {
+    color: #E9F1FA;
+    box-shadow: var(--box-shadow);
+    transform: scale(1.1);
+}
+
+/* ------------------ */
+/* Scrollbar Customization */
+/* ------------------ */
+.nav-items {
+    overflow-y:scroll;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-bg) transparent;
+}
+
+.nav-items::-webkit-scrollbar {
+    width: 6px;
+}
+
+.nav-items::-webkit-scrollbar-thumb {
+    background-color: rgba(52, 152, 219, 0.8);
+    border-radius: 6px;
+}
+
+.nav-items::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ------------------ */
+/* Animasi Hover */
+/* ------------------ */
+@keyframes rise {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-5px);
+    }
+}
+/* navbar-items end */
+
+
+/* navbar-list-items start */
+.nav-list-items {
+    list-style: none;
+}
+.list {
+    color: #E9F1FA;
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    text-decoration: none;
+    padding: 0.5rem 0 0.5rem 3rem;
+    transition: all 0.3s ease-in-out;
+    border-radius: 5px;
+}
+
+.minimize-list-logo {
+    color: #E9F1FA;
+    list-style: none;
+    cursor: pointer;
+    margin: 0.5rem;
+    padding: 0.3rem;
+    font-size: 2rem;
+    text-decoration: none;
+    transition: all 0.3s ease-in-out;
+    border-radius: 5px;
+}
+
+/* Efek saat hover */
+.list:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background-color: rgba(233, 241, 250, 0.1);
+}
+
+.minimize-list-logo:hover{
+    background-color: rgba(233, 241, 250, 0.1);
+    border: 1px solid #E9F1FA ;
+}
+
+/* Efek saat aktif */
+.list-active {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    background-color: rgba(233, 241, 250, 0.2);
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #E9F1FA;
+    padding: 0.5rem 0 0.5rem 3rem;
+    transform: scale(1.1);
+    transition: transform 0.3s ease-in-out;
+    border-radius: 5px;
+}
+
+
+
+/* Efek untuk ikon pada navbar yang diperkecil */
+.minimize-list-logo-active {
+    color: #E9F1FA;
+    list-style: none;
+    font-size: 2rem;
+    padding: 0.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease-in-out;
+    margin: 0.5rem;
+}
+
+
+/*navbar-list-items end */
+
