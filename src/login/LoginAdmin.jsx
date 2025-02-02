@@ -39,7 +39,7 @@ function LoginAdmin() {
 
     return (
         <div className="login-page d-flex align-items-center justify-content-center text-center" 
-             style={{height: '100vh', backgroundColor: '#FFFFF0'}}>
+             style={{height: '100vh', backgroundColor: '#E9F1FA'}}>
             <div className="login-box p-3 rounded-2 d-flex shadow">
                 <div className="h-100 w-100 m-0 p-3">
                     <h1>Login Admin</h1>

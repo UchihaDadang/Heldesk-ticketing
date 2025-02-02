@@ -31,7 +31,7 @@ html, body {
 .login-box {
     width: 30%;
     height: 60%;
-    background-color: var(--primary-bg);
+    background-color: #00ABE4;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -276,7 +276,24 @@ html, body {
     transition: all 0.3s ease-in-out;
     margin: 0.5rem;
 }
-
-
 /*navbar-list-items end */
+
+
+/* name-card start */
+.name-card {
+    /* width: 30rem; */
+    height: 15rem;
+    background-color: #00ABE4;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.note-card {
+    text-align: justify;
+    font-size: 0.8rem;
+    color: #E9F1FA;
+    border-radius: 1px solid #E9F1FA;
+}
+
+/* name-card end */
 
