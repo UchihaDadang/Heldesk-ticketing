@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Impor useNavigate
+import { useNavigate } from 'react-router-dom';
 
 function LoginAdmin() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const navigate = useNavigate(); // Gunakan useNavigate
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -26,7 +26,13 @@ function LoginAdmin() {
 
             if (response.data.token) {
                 localStorage.setItem('token', response.data.token);
-                navigate('/admin/beranda'); // Arahkan ke /admin/beranda
+                navigate('/admin/beranda');
+                Swal.fire({
+                    title: "Berhasil Login!",
+                    timer: 1000,
+                    showConfirmButton: false,
+                    icon: "success",
+                });     
             }
 
         } catch (error) {

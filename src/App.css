@@ -52,7 +52,7 @@ html, body {
     transition: all 0.3s ease;
 }
 
-.btn-login:hover {
+.btn-login:hover, .btn-login-user:hover {
     box-shadow: var(--box-shadow);
     transform: scale(1.05);
     background-color: #FFFAE0;
@@ -69,7 +69,7 @@ html, body {
     padding: 0.5rem;
     border-radius: 5px;
     transition: all 0.3s ease-in-out;
-} */
+}
 
 .form-control:hover,
 .form-control:focus {
@@ -292,7 +292,7 @@ html, body {
     text-align: justify;
     font-size: 0.8rem;
     color: #E9F1FA;
-    border-radius: 1px solid #E9F1FA;
+    
 }
 
 /* name-card end */
