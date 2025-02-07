@@ -17,7 +17,7 @@ function LoginAdmin() {
         try {
             console.log('Mencoba login dengan:', { username, password });
 
-            const response = await axios.post('http://localhost:3000/login', {
+            const response = await axios.post('http://localhost:3000/login/admin', {
                 username,
                 password
             });

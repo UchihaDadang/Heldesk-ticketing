@@ -15,10 +15,14 @@ import StatistikPengaduan from './admin-page/content/content-items/StatistikPeng
 import InformaiTiket from './admin-page/content/content-items/InformasiTiket'
 import StatusTiket from './admin-page/content/content-items/StatusTiket'
 import StatistikTiket from './admin-page/content/content-items/StatistikTiket'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 
 const App = () => {
   return (
-    <>
+    <GoogleOAuthProvider 
+    clientId='1055181885424-f2iha2701nfhb22hugvc3pcfle4kvd7r.apps.googleusercontent.com'
+    onScriptLoadError={() => console.log('Failed to load Google script')}
+    onScriptLoadSuccess={() => console.log('Google script loaded successfully')}>
       <Router>
         <Routes>
           <Route path='/' element={<LoginUser/>}/>
@@ -26,22 +30,22 @@ const App = () => {
           <Route element={<ProtectedRoute/>}>
             <Route path='/admin' element={<AdminPage/>}>
               <Route index element={<Beranda to="beranda" replace />} />
-                <Route path="beranda" element={<Beranda />}/>
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="pengaduan" element={<Pengaduan />} />
-                <Route path="informasi-pengaduan" element={<InformasiPengaduan />}/>
-                <Route path="status-pengaduan" element={<StatusPengaduan />} />
-                <Route path="statistik-pengaduan" element={<StatistikPengaduan />} />
-                <Route path="informasi-tiket" element={<InformaiTiket />} />
-                <Route path="status-tiket" element={<StatusTiket />} />
-                <Route path="statistik-tiket" element={<StatistikTiket />} />
+              <Route path="beranda" element={<Beranda />}/>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="pengaduan" element={<Pengaduan />} />
+              <Route path="informasi-pengaduan" element={<InformasiPengaduan />}/>
+              <Route path="status-pengaduan" element={<StatusPengaduan />} />
+              <Route path="statistik-pengaduan" element={<StatistikPengaduan />} />
+              <Route path="informasi-tiket" element={<InformaiTiket />} />
+              <Route path="status-tiket" element={<StatusTiket />} />
+              <Route path="statistik-tiket" element={<StatistikTiket />} />
             </Route>
           </Route>
           <Route path='/user/beranda/*' element={<UserPage/>}/>
           <Route path='*' element={<NotFound/>}/>
         </Routes>
       </Router>
-    </>
+    </GoogleOAuthProvider>
   )
 }
 
