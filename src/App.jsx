@@ -41,7 +41,7 @@ const App = () => {
               <Route path="statistik-tiket" element={<StatistikTiket />} />
             </Route>
           </Route>
-          <Route path='/user/beranda/*' element={<UserPage/>}/>
+          <Route path='/user/beranda' element={<UserPage/>}/>
           <Route path='*' element={<NotFound/>}/>
         </Routes>
       </Router>
