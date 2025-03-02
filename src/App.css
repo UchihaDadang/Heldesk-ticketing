@@ -12,7 +12,8 @@
   }
 
 html, body {
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     height: 100%;
   }
 
@@ -301,5 +302,16 @@ html, body {
 
 
 /* user dashboard start*/
-
+.mobile-container {
+    background-color: lightcoral;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .tablet-container {
+    background-color: lightblue;
+    padding: 20px;
+    text-align: center;
+  }
+  
 /* user dashboard end */

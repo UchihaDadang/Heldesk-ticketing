@@ -71,7 +71,7 @@ function LoginAdmin() {
                                     required
                                     />
                             </div>
-                            <button type="submit" className="btn btn-block btn-login" disabled={loading}>
+                            <button type="submit" className="btn-block btn-login" disabled={loading}>
                                 {loading ? 'Loading...' : 'Login'}
                             </button>
                                 {error && <div className="alert alert-danger">{error}</div>}
