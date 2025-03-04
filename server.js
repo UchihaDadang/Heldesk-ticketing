@@ -7,13 +7,20 @@ const init = async () => {
         host: 'localhost',
         routes: {
             cors: {
-                origin: ['*'],
-                credentials: true
+                origin: ['http://localhost:5173'], // URL frontend Anda
+                headers: [
+                    'Accept', 
+                    'Content-Type', 
+                    'Authorization', 
+                    'Access-Control-Allow-Origin'
+                ],
+                credentials: false,
             }
         }
     });
 
     server.route(routes);
+    
     await server.start();
     console.log(`Server Berjalan di`, server.info.uri);
 };
