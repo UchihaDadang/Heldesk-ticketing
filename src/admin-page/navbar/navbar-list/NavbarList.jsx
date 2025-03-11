@@ -6,7 +6,7 @@ export default function NavbarList({ isMinimize }) {
             title: 'Dashboard',
             items: [
                 {to: 'beranda' ,icon: "bi bi-house-fill", label: 'Beranda'},
-                {to: 'dashboard', icon: 'bi bi-postcard-fill', label: 'Dashboard'},
+                {to: 'dashboard', icon: 'bi bi-postcard-fill', label: 'About'},
             ],
         },
         {

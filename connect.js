@@ -20,4 +20,8 @@ pool.getConnection()
         console.error('Error connecting to database:', err);
     });
 
+const [result] = await pool.execute('SELECT 1');
+console.log("Database connection test:", result);
+
+
 export default pool;

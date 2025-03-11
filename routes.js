@@ -1,4 +1,10 @@
-import { handlerLoginAdmin, handlerLoginUser, handlerSubmitReport } from './handler.js';
+import { 
+    handlerLoginAdmin,
+    handlerLoginUser, 
+    handlerSubmitReport,
+    handlerGetCrimeReports,
+    handlerGetCrimeReportById,
+ } from './handler.js';
 import Joi from 'joi';
 
 const routes = [
@@ -20,6 +26,7 @@ const routes = [
             }
         }
     },
+
     {
         method: 'POST',
         path: '/api/report',
@@ -41,7 +48,214 @@ const routes = [
                 }
             }
         }
-    }
+    },
+
+    // {
+    //     method: 'GET',
+    //     path: '/api/dashboard/statistics',
+    //     handler: handlerGetReportStatistics,
+    //     options: {
+    //         auth: false,
+    //         cors: {
+    //             origin: ['http://localhost:5173'],
+    //             headers: ['Accept', 'Content-Type', 'Authorization'],
+    //             credentials: false
+    //         }
+    //     }
+    // },
+
+    {
+        method: 'GET',
+        path: '/api/report/crime',
+        handler: handlerGetCrimeReports,
+        options: {
+            auth: false,
+            cors: {
+                origin: ['http://localhost:5173'],
+                headers: ['Accept', 'Content-Type', 'Authorization'],
+                credentials: true
+            },
+            validate: {
+                query: Joi.object({
+                    page: Joi.number().integer().min(1).default(1),
+                    limit: Joi.number().integer().min(1).max(100).default(10)
+                }),
+                failAction: (request, h, err) => {
+                    console.error('Validation Error:', err);
+                    return h.response({ message: 'Invalid query parameters', details: err.details }).code(400);
+                }
+            }
+        }
+    },
+    
+    {
+        method: 'GET',
+        path: '/api/report/crime/{id}',
+        handler: handlerGetCrimeReportById,
+        options: {
+            auth: false, 
+            cors: {
+                origin: ['http://localhost:5173'],
+                headers: ['Accept', 'Content-Type', 'Authorization'],
+                credentials: false
+            },
+            validate: {
+                params: Joi.object({
+                    id: Joi.number().integer().required()
+                }),
+                failAction: (request, h, err) => {
+                    console.error('Validation Error:', err);
+                    throw err;
+                }
+            }
+        }
+    },
+    
+    // {
+    //     method: 'GET',
+    //     path: '/api/reports/missing',
+    //     handler: handlerGetMissingReports,
+    //     options: {
+    //         auth: false,
+    //         cors: {
+    //             origin: ['http://localhost:5173'],
+    //             headers: ['Accept', 'Content-Type', 'Authorization'],
+    //             credentials: false
+    //         },
+    //         validate: {
+    //             query: Joi.object({
+    //                 page: Joi.number().integer().min(1).default(1),
+    //                 limit: Joi.number().integer().min(1).max(100).default(10)
+    //             }),
+    //             failAction: (request, h, err) => {
+    //                 console.error('Validation Error:', err);
+    //                 throw err;
+    //             }
+    //         }
+    //     }
+    // },
+
+    // {
+    //     method: 'GET',
+    //     path: '/api/reports/domestic-violence',
+    //     handler: handlerGetDomesticViolenceReports,
+    //     options: {
+    //         auth: false,
+    //         cors: {
+    //             origin: ['http://localhost:5173'],
+    //             headers: ['Accept', 'Content-Type', 'Authorization'],
+    //             credentials: false
+    //         },
+    //         validate: {
+    //             query: Joi.object({
+    //                 page: Joi.number().integer().min(1).default(1),
+    //                 limit: Joi.number().integer().min(1).max(100).default(10)
+    //             }),
+    //             failAction: (request, h, err) => {
+    //                 console.error('Validation Error:', err);
+    //                 throw err;
+    //             }
+    //         }
+    //     }
+    // },
+
+    // {
+    //     method: 'GET',
+    //     path: '/api/reports/bullying',
+    //     handler: handlerGetBullyingReports,
+    //     options: {
+    //         auth: false,
+    //         cors: {
+    //             origin: ['http://localhost:5173'],
+    //             headers: ['Accept', 'Content-Type', 'Authorization'],
+    //             credentials: false
+    //         },
+    //         validate: {
+    //             query: Joi.object({
+    //                 page: Joi.number().integer().min(1).default(1),
+    //                 limit: Joi.number().integer().min(1).max(100).default(10)
+    //             }),
+    //             failAction: (request, h, err) => {
+    //                 console.error('Validation Error:', err);
+    //                 throw err;
+    //             }
+    //         }
+    //     }
+    // },
+    
+    // {
+    //     method: 'GET',
+    //     path: '/api/reports/suspicious',
+    //     handler: handlerGetSuspiciousActivityReports,
+    //     options: {
+    //         auth: false,
+    //         cors: {
+    //             origin: ['http://localhost:5173'],
+    //             headers: ['Accept', 'Content-Type', 'Authorization'],
+    //             credentials: false
+    //         },
+    //         validate: {
+    //             query: Joi.object({
+    //                 page: Joi.number().integer().min(1).default(1),
+    //                 limit: Joi.number().integer().min(1).max(100).default(10)
+    //             }),
+    //             failAction: (request, h, err) => {
+    //                 console.error('Validation Error:', err);
+    //                 throw err;
+    //             }
+    //         }
+    //     }
+    // },
+    
+    // {
+    //     method: 'GET',
+    //     path: '/api/reports/feedback',
+    //     handler: handlerGetFeedback,
+    //     options: {
+    //         auth: false,
+    //         cors: {
+    //             origin: ['http://localhost:5173'],
+    //             headers: ['Accept', 'Content-Type', 'Authorization'],
+    //             credentials: false
+    //         },
+    //         validate: {
+    //             query: Joi.object({
+    //                 page: Joi.number().integer().min(1).default(1),
+    //                 limit: Joi.number().integer().min(1).max(100).default(10)
+    //             }),
+    //             failAction: (request, h, err) => {
+    //                 console.error('Validation Error:', err);
+    //                 throw err;
+    //             }
+    //         }
+    //     }
+    // },
+    
+    // {
+    //     method: 'GET',
+    //     path: '/api/reports/search',
+    //     handler: handlerSearchReports,
+    //     options: {
+    //         auth: false, 
+    //         cors: {
+    //             origin: ['http://localhost:5173'],
+    //             headers: ['Accept', 'Content-Type', 'Authorization'],
+    //             credentials: false
+    //         },
+    //         validate: {
+    //             query: Joi.object({
+    //                 keyword: Joi.string().required(),
+    //                 category: Joi.string().valid('crime', 'missing', 'domestic', 'bullying', 'suspicious', 'feedback').required(),
+    //                 page: Joi.number().integer().min(1).default(1),
+    //                 limit: Joi.number().integer().min(1).max(100).default(10)
+    //             }),
+    //             failAction: (request, h, err) => {
+    //                 console.error('Validation Error:', err);
+    //                 throw err;
+    //             }
+    //         }
+    //     }
+    // }
 ];
 
 export default routes;

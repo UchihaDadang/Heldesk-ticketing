@@ -11,7 +11,7 @@ export default function ModalHeaders({ title }) {
 
 const HeaderBeranda = () => <ModalHeaders title='Beranda'/>
 const HeaderPengaduan = () => <ModalHeaders title='Pengaduan'/>
-const HeaderDashboard = () => <ModalHeaders title='Dashboard'/>
+const HeaderDashboard = () => <ModalHeaders title='About'/>
 const HeaderStatusTiket = () => <ModalHeaders title='Status Tiket'/>
 const HeaderStatistikTiket = () => <ModalHeaders title='Statistik Tiket'/>
 const HeaderInformasiTiket = () => <ModalHeaders title='Informasi Tiket'/>

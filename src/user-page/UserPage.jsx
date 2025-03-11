@@ -170,8 +170,7 @@ const UserPage = () => {
                 justifyContent: "center",
                 marginLeft: "-20px",
               }}
-            >
-              
+            >&lt;
             </Button>
 
             <div
@@ -219,7 +218,7 @@ const UserPage = () => {
                 justifyContent: "center",
                 marginRight: "-20px",
               }}
-            >
+            >&gt;
             </Button>
           </div>
         </Container>
