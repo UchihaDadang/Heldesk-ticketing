@@ -2,8 +2,9 @@ import {
     handlerLoginAdmin,
     handlerLoginUser, 
     handlerSubmitReport,
+    handlerGetAllReports,
     handlerGetCrimeReports,
-    handlerGetCrimeReportById,
+    handlerUpdateCrimeReportStatus,
  } from './handler.js';
 import Joi from 'joi';
 
@@ -66,8 +67,8 @@ const routes = [
 
     {
         method: 'GET',
-        path: '/api/report/crime',
-        handler: handlerGetCrimeReports,
+        path: '/api/reports/all',
+        handler: handlerGetAllReports,
         options: {
             auth: false,
             cors: {
@@ -90,8 +91,8 @@ const routes = [
     
     {
         method: 'GET',
-        path: '/api/report/crime/{id}',
-        handler: handlerGetCrimeReportById,
+        path: '/api/report/crime',
+        handler: handlerGetCrimeReports,
         options: {
             auth: false, 
             cors: {
@@ -100,16 +101,33 @@ const routes = [
                 credentials: false
             },
             validate: {
-                params: Joi.object({
-                    id: Joi.number().integer().required()
+                query: Joi.object({
+                    id: Joi.number().integer().optional(),
+                    status: Joi.string().valid('Diproses', 'Menunggu').optional(),
+                    tanggal_laporan: Joi.string().isoDate().optional()
                 }),
                 failAction: (request, h, err) => {
-                    console.error('Validation Error:', err);
-                    throw err;
+                    console.error('Validation Error:', err.message);
+                    return h.response({ message: "Query parameter tidak valid" }).code(400);
                 }
             }
         }
     },
+
+    {
+        method: 'PUT',
+        path: '/api/report/crime/{id}',
+        handler: handlerUpdateCrimeReportStatus,
+        options: { 
+            auth: false,
+            cors: {
+                origin: ['http://localhost:5173'],
+                headers: ['Accept', 'Content-Type', 'Authorization'],
+                credentials: false
+            }
+        }
+    },
+    
     
     // {
     //     method: 'GET',

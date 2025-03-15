@@ -153,49 +153,99 @@ const handlerSubmitReport = async (request, h) => {
     }
 };
 
-const handlerGetCrimeReports = async (request, h) => {
+const handlerGetAllReports = async (request, h) => {
     try {
-        const [rows] = await pool.execute(
-            'SELECT * FROM crime_reports ORDER BY tanggal_laporan DESC'
+        const [crimeReports] = await pool.execute(
+            'SELECT *, "Crime" AS type FROM crime_reports WHERE status = "Menunggu" ORDER BY tanggal_laporan DESC'
         );
+        const [bullyingReports] = await pool.execute(
+            'SELECT *, "Bullying" AS type FROM bullying_reports WHERE status = "Menunggu" ORDER BY tanggal_laporan DESC'
+        );
+        const [domesticViolenceReports] = await pool.execute(
+            'SELECT *, "Domestic Violence" AS type FROM domestic_violence_reports WHERE status = "Menunggu" ORDER BY tanggal_laporan DESC'
+        );
+        const [missingReports] = await pool.execute(
+            'SELECT *, "Missing" AS type FROM missing_reports WHERE status = "Menunggu" ORDER BY tanggal_laporan DESC'
+        );
+        const [suspiciousActivityReports] = await pool.execute(
+            'SELECT *, "Suspicious Activity" AS type FROM suspicious_activity_reports WHERE status = "Menunggu" ORDER BY tanggal_laporan DESC'
+        );
+        
 
-        const [countResult] = await pool.execute('SELECT COUNT(*) as total FROM crime_reports');
-        const total = countResult[0].total;
+        const allReports = [
+            ...crimeReports,
+            ...bullyingReports,
+            ...domesticViolenceReports,
+            ...missingReports,
+            ...suspiciousActivityReports
+        ];
+        allReports.sort((a, b) => new Date(b.tanggal_laporan) - new Date(a.tanggal_laporan));
 
-        return {
-            data: rows,
-            pagination: {
-                total
-            }
-        };
+        return h.response({ data: allReports }).code(200);
     } catch (error) {
         console.error('Error in handlerGetCrimeReports:', error.message || error);
         return h.response({ message: 'Internal server error' }).code(500);
     }
 };
 
-const handlerGetCrimeReportById = async (request, h) => {
+const handlerGetCrimeReports = async (request, h) => {
+    try {
+        const { id, status, tanggal_laporan } = request.query; 
+        let query = 'SELECT * FROM crime_reports WHERE 1=1'; 
+        let values = [];
+
+        if (id) {
+            query += ' AND id = ?';
+            values.push(id);
+        }
+
+        if (status) {
+            query += ' AND status = ?';
+            values.push(status);
+        }
+
+        if (tanggal_laporan) {
+            query += ' AND tanggal_laporan = ?';
+            values.push(tanggal_laporan);
+        }
+
+        const [rows] = await pool.execute(query, values);
+
+        if (rows.length === 0) {
+            return h.response({ message: "Data tidak ditemukan" }).code(404);
+        }
+
+        return h.response({ data: rows }).code(200);
+    } catch (error) {
+        console.error("Error in handlerGetCrimeReports:", error);
+        return h.response({ message: "Internal server error" }).code(500);
+    }
+};
+
+const handlerUpdateCrimeReportStatus = async (request, h) => {
     try {
         const { id } = request.params;
-        
-        console.log('Fetching crime report with ID:', id);
 
-        const [rows] = await pool.execute(
-            'SELECT * FROM crime_reports WHERE id = ?',
-            [id]
+        console.log('Updating crime report status for ID:', id);
+
+        const [result] = await pool.execute(
+            'UPDATE crime_reports SET status = ? WHERE id = ?',
+            ['Diproses', id]
         );
-        
-        if (rows.length === 0) {
-            console.log('No data found for ID:', id);
+
+        if (result.affectedRows === 0) {
+            console.log('No record updated for ID:', id);
             return h.response({ message: 'Laporan tidak ditemukan' }).code(404);
         }
-        
-        return { data: rows[0] };
+
+        return h.response({ message: 'Status laporan berhasil diperbarui' }).code(200);
     } catch (error) {
-        console.error('Error in handlerGetCrimeReportById:', error);
+        console.error('Error in handlerUpdateCrimeReportStatus:', error);
         return h.response({ message: 'Internal server error' }).code(500);
     }
 };
+
+
 
 // const handlerGetMissingReports = async (request, h) => {
 //     try {
@@ -439,8 +489,9 @@ export {
     handlerLoginAdmin, 
     handlerLoginUser, 
     handlerSubmitReport,
+    handlerGetAllReports,
     handlerGetCrimeReports,
-    handlerGetCrimeReportById,
+    handlerUpdateCrimeReportStatus,
     // handlerGetMissingReports,
     // handlerGetDomesticViolenceReports,
     // handlerGetBullyingReports,

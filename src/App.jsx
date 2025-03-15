@@ -16,6 +16,11 @@ import InformaiTiket from './admin-page/content/content-items/InformasiTiket'
 import StatusTiket from './admin-page/content/content-items/StatusTiket'
 import StatistikTiket from './admin-page/content/content-items/StatistikTiket'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import TindakanKejahatan from './admin-page/content/content-items/TindakanKejahatan'
+import Kehilangan from './admin-page/content/content-items/Kehilangan'
+import KDRT from './admin-page/content/content-items/KDRT'
+import Bulyying from './admin-page/content/content-items/Bulyying'
+import TindakanMencurigakan from './admin-page/content/content-items/TindakanMencurigakan'
 
 const App = () => {
   return (
@@ -39,6 +44,11 @@ const App = () => {
               <Route path="informasi-tiket" element={<InformaiTiket />} />
               <Route path="status-tiket" element={<StatusTiket />} />
               <Route path="statistik-tiket" element={<StatistikTiket />} />
+              <Route path='detail-pengaduan-tindak-kejahatan' element={<TindakanKejahatan/>}/>
+              <Route path='detail-pengaduan-kehilangan' element={<Kehilangan/>}/>
+              <Route path='detail-pengaduan-kdrt' element={<KDRT/>}/>
+              <Route path='detail-pengaduan-bulyying' element={<Bulyying/>}/>
+              <Route path='detail-pengaduan-tindakan-mencurigakan' element={<TindakanMencurigakan/>}/>
             </Route>
           </Route>
           <Route path='/user/beranda' element={<UserPage/>}/>

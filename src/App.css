@@ -315,3 +315,68 @@ html, body {
   }
   
 /* user dashboard end */
+
+/* Default styling */
+.navbar-list-items ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.navbar-list-items li {
+    position: relative;
+}
+
+.navbar-list-items .submenu {
+    display: none; /* Sub-menu hidden by default */
+    position: absolute;
+    top: 100%; /* Position below the parent item */
+    left: 0;
+    background-color: #94c5fd;
+    z-index: 1000;
+    width: 14rem;
+    border-radius: 8px;
+
+}
+
+.navbar-list-items .submenu li {
+    padding: 0.2rem 1rem;
+}
+
+.navbar-list-items .submenu li a {
+    color: #E9F1FA;
+    text-decoration: none;
+}
+
+.list-active {
+    background-color: #00ABE4;
+}
+
+.navbar-list-items .submenu li a:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background-color: #00ABE4;
+}
+
+/* Show submenu on hover */
+.navbar-list-items li.has-submenu:hover > .submenu {
+    display: block;
+}
+
+.custom-list:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background-color: rgba(233, 241, 250, 0.1);
+}
+
+
+.custom-list {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: #E9F1FA;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
