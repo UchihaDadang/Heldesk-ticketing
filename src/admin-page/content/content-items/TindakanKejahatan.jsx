@@ -1,13 +1,248 @@
 import { HeaderTindakanKejahatan } from "../../../modal/ModalHeaders";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { Table, Form, Button, Pagination, Modal } from "react-bootstrap";
+import { FaSync, FaEye, FaSearch } from "react-icons/fa";
 
 const TindakanKejahatan = () => {
+    const [data, setData] = useState([]);
+    const [error, setError] = useState("");
+    const [filterStatus, setFilterStatus] = useState("Diproses");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [selectedData, setSelectedData] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const itemsPerPage = 50;
+    const tableRef = useRef(null);
 
+    const fetchData = async () => {
+        try {
+            const response = await axios.get("http://localhost:3000/api/report/crime");
+            if (response.data && response.data.data) {
+                setData(response.data.data);
+            } else {
+                throw new Error("Data Tidak Ditemukan.");
+            }
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            setError("Gagal Mengambil Data, Silahkan Coba Lagi.");
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+        const interval = setInterval(fetchData, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        if (tableRef.current) {
+            tableRef.current.scrollTop = 0;
+        }
+    }, [currentPage]);
+
+    const filteredData = data.filter(
+        (item) => filterStatus === "Diproses" || item.status === filterStatus
+    );
+
+    const searchedData = filteredData.filter((item) =>
+        item.id.toString().includes(searchQuery) ||
+        item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.alamat.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const totalPages = Math.max(Math.ceil(searchedData.length / itemsPerPage), 1);
+
+    const currentItems = searchedData.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    const handleShowModal = (item) => {
+        setSelectedData(item);
+        setShowModal(true);
+    };
     
+    const handleCloseModal = () => {
+        setShowModal(false);
+    };
 
-    return(
-        <HeaderTindakanKejahatan/>
-    )
-}
+    return (
+        <>
+            <HeaderTindakanKejahatan />
+            <div className="container">
+                {error && <p className="text-danger">{error}</p>}
 
-export default TindakanKejahatan
+                {/* Filter, Pencarian, dan Refresh (Dipindah ke kanan) */}
+                <div className="d-flex justify-content-between align-items-center">
+                    <Button onClick={fetchData} variant="primary">
+                        <FaSync /> Refresh
+                    </Button>
+
+                    <div className="d-flex align-items-center">
+                        <Form.Select
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                            style={{ width: "200px", marginRight: "10px", height: "3rem" }}
+                        >
+                            <option value="Diproses">Diproses</option>
+                            <option value="Selesai">Selesai</option>
+                        </Form.Select>
+
+                        <div className="d-flex align-items-center">
+                            <FaSearch className="me-2" />
+                            <Form.Control
+                                type="text"
+                                placeholder="Cari ID, Nama, Email, Alamat"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                style={{ width: "300px" }}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Scrollable Table */}
+                <div
+                    className="table-responsive"
+                    style={{
+                        maxHeight: "400px",
+                        overflowY: "auto",
+                    }}
+                    ref={tableRef}
+                >
+                    <Table striped bordered hover>
+                        <thead
+                            className="table-dark text-center"
+                            style={{
+                                position: "sticky",
+                                top: 0,
+                                zIndex: 10,
+                                backgroundColor: "#343a40",
+                            }}
+                        >
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama</th>
+                                <th>Email</th>
+                                <th>Alamat</th>
+                                <th>Deskripsi</th>
+                                <th>Tanggal</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {currentItems.length > 0 ? (
+                                currentItems.map((item) => (
+                                    <tr key={item.id} className="text-center">
+                                        <td>{item.id}</td>
+                                        <td>{item.nama ? `${item.nama.substring(0, 10)}...` : "_"}</td>
+                                        <td>{item.email ? `${item.email.substring(0, 10)}...` : "_"}</td>
+                                        <td>{item.alamat ? `${item.alamat.substring(0, 15)}...` : "-"}</td>
+                                        <td>{item.deskripsi ? `${item.deskripsi.substring(0, 30)}...` : "-"}</td>
+                                        <td>{item.tanggal_laporan ? item.tanggal_laporan.substring(0, 10) : "-"}</td>
+                                        <td>
+                                            <span className={`badge ${item.status === "Diproses" ? "bg-success" : "bg-warning"}`}>
+                                                {item.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <Button
+                                                variant="info"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setSelectedData(item);
+                                                    setShowModal(true);
+                                                }}
+                                            >
+                                                <FaEye /> Detail
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="8" className="text-center text-muted">
+                                        Tidak ada data yang ditemukan.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </Table>
+                </div>
+
+                <Pagination className="justify-content-center mt-3">
+                    <Pagination.Prev
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                    >
+                        Prev
+                    </Pagination.Prev>
+
+                    {[...Array(totalPages)].map((_, index) => (
+                        <Pagination.Item
+                            key={index}
+                            active={index + 1 === currentPage}
+                            onClick={() => setCurrentPage(index + 1)}
+                        >
+                            {index + 1}
+                        </Pagination.Item>
+                    ))}
+
+                    <Pagination.Next
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                    >
+                        Next
+                    </Pagination.Next>
+                </Pagination>
+            </div>
+
+            <>
+                {/* Tombol Detail */}
+                <Button
+                    variant="info"
+                    size="sm"
+                    onClick={() => handleShowModal(item)}
+                >
+                    <FaEye /> Detail
+                </Button>
+
+                {/* Modal Box untuk Detail */}
+                <Modal show={showModal} onHide={handleCloseModal} centered>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Detail Pengaduan</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {selectedData ? (
+                            <div>
+                                <p><strong>ID:</strong> {selectedData.id}</p>
+                                <p><strong>Nama:</strong> {selectedData.nama}</p>
+                                <p><strong>Email:</strong> {selectedData.email}</p>
+                                <p><strong>Alamat:</strong> {selectedData.alamat || "-"}</p>
+                                <p><strong>Deskripsi:</strong> {selectedData.deskripsi || "-"}</p>
+                                <p><strong>Tanggal:</strong> {selectedData.tanggal_laporan || "-"}</p>
+                                <p>
+                                    <strong>Status:</strong>{" "}
+                                    <span className={`badge ${selectedData.status === "Diproses" ? "bg-success" : "bg-warning"}`}>
+                                        {selectedData.status}
+                                    </span>
+                                </p>
+                            </div>
+                        ) : (
+                            <p>Data tidak ditemukan.</p>
+                        )}
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={handleCloseModal}>Tutup</Button>
+                    </Modal.Footer>
+                </Modal>
+            </>
+        </>
+        
+    );
+};
+
+export default TindakanKejahatan;

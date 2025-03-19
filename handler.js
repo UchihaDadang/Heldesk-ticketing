@@ -95,23 +95,23 @@ const handlerSubmitReport = async (request, h) => {
         switch (feature) {
             case "Tindak Kejahatan":
                 tableName = "crime_reports";
-                columnMapping = { "Nama": "nama", "Email": "email", "Nomor Telepon": "nomor_telepon", "Alamat": "alamat", "Deskripsi Tindak Kejahatan": "deskripsi_tindak_kejahatan" };
+                columnMapping = { "Nama": "nama", "Email": "email", "Nomor Telepon": "nomor_telepon", "Alamat": "alamat", "Deskripsi Tindak Kejahatan": "deskripsi" };
                 break;
             case "Kehilangan":
                 tableName = "missing_reports";
-                columnMapping = { "Nama": "nama", "Email": "email", "Nomor Telepon": "nomor_telepon", "Informasi Objek Yang Hialng": "deskripsi_kehilangan" };
+                columnMapping = { "Nama": "nama", "Email": "email", "Nomor Telepon": "nomor_telepon", "Informasi Objek Yang Hialng": "deskripsi" };
                 break;
             case "KDRT":
                 tableName = "domestic_violence_reports";
-                columnMapping = { "Nama": "nama", "Nomor Telepon": "nomor_telepon", "Alamat": "alamat", "Nama Pelaku": "nama_pelaku", "Status Pelaku": "status_pelaku", "Keterangan": "deskripsi_kdrt" };
+                columnMapping = { "Nama": "nama", "Nomor Telepon": "nomor_telepon", "Alamat": "alamat", "Nama Pelaku": "nama_pelaku", "Status Pelaku": "status_pelaku", "Keterangan": "deskripsi" };
                 break;
             case "Bulying":
                 tableName = "bullying_reports";
-                columnMapping = { "Nama": "nama", "Nomor Telepon": "nomor_telepon", "Asal Sekolah": "asal_sekolah", "Nama Pelaku": "nama_pelaku", "Deskripsi": "deskripsi_bullying" };
+                columnMapping = { "Nama": "nama", "Nomor Telepon": "nomor_telepon", "Asal Sekolah": "asal_sekolah", "Nama Pelaku": "nama_pelaku", "Deskripsi": "deskripsi" };
                 break;
             case "Tindakan Mencurigakan":
                 tableName = "suspicious_activity_reports";
-                columnMapping = { "Nama": "nama", "Nomor Telepon": "nomor_telepon", "Alamat": "alamat", "Deskripsi Tindakan Mencurigakan": "deskripsi_mencurigakan" };
+                columnMapping = { "Nama": "nama", "Nomor Telepon": "nomor_telepon", "Alamat": "alamat", "Deskripsi Tindakan Mencurigakan": "deskripsi" };
                 break;
             case "Kritik dan Saran":
                 tableName = "feedback";
@@ -124,14 +124,19 @@ const handlerSubmitReport = async (request, h) => {
                 }).code(400);
         }
 
-        const dbColumns = Object.keys(data).map(key => `\`${columnMapping[key] || key}\``).join(", ");
-        const values = Object.values(data);
+        const statusKey = "`status`";
+        const statusValue = "Menunggu"; // Nilai default
+
+        let dbColumns = Object.keys(data).map(key => `\`${columnMapping[key] || key}\``);
+        let values = Object.values(data);
+
+        if (!dbColumns.includes(statusKey)) {
+            dbColumns.push(statusKey);
+            values.push(statusValue);
+        }
+
         const placeholders = values.map(() => "?").join(", ");
-
-        const query = `INSERT INTO ${tableName} (${dbColumns}) VALUES (${placeholders})`;
-
-        console.log("Executing Query:", query);
-        console.log("With Values:", values);
+        const query = `INSERT INTO ${tableName} (${dbColumns.join(", ")}) VALUES (${placeholders})`;
 
         await pool.query(query, values);
 
@@ -190,31 +195,18 @@ const handlerGetAllReports = async (request, h) => {
 
 const handlerGetCrimeReports = async (request, h) => {
     try {
-        const { id, status, tanggal_laporan } = request.query; 
-        let query = 'SELECT * FROM crime_reports WHERE 1=1'; 
-        let values = [];
+        // Ambil hanya data dengan status "Diproses" dan "Selesai"
+        const [rows] = await pool.execute(
+            'SELECT *, "Crime" AS type FROM crime_reports WHERE status IN (?, ?) ORDER BY tanggal_laporan DESC',
+            ["Diproses", "Selesai"]
+        );
 
-        if (id) {
-            query += ' AND id = ?';
-            values.push(id);
-        }
-
-        if (status) {
-            query += ' AND status = ?';
-            values.push(status);
-        }
-
-        if (tanggal_laporan) {
-            query += ' AND tanggal_laporan = ?';
-            values.push(tanggal_laporan);
-        }
-
-        const [rows] = await pool.execute(query, values);
-
+        // Jika tidak ada data, kembalikan array kosong
         if (rows.length === 0) {
-            return h.response({ message: "Data tidak ditemukan" }).code(404);
+            return h.response({ data: [] }).code(200);
         }
 
+        // Kembalikan data jika ada
         return h.response({ data: rows }).code(200);
     } catch (error) {
         console.error("Error in handlerGetCrimeReports:", error);
@@ -225,8 +217,6 @@ const handlerGetCrimeReports = async (request, h) => {
 const handlerUpdateCrimeReportStatus = async (request, h) => {
     try {
         const { id } = request.params;
-
-        console.log('Updating crime report status for ID:', id);
 
         const [result] = await pool.execute(
             'UPDATE crime_reports SET status = ? WHERE id = ?',

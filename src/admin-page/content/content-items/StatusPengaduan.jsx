@@ -1,256 +1,138 @@
 import { HeaderStatusPengaduan } from "../../../modal/ModalHeaders";
-import React, { useState, useEffect, useCallback } from "react";
-import { Table, Button, Modal, Spinner, Alert, Form, InputGroup, Row, Col, Pagination } from "react-bootstrap";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { FaCopy, FaSearch, FaFilter, FaSync } from "react-icons/fa";
+import { Table, Form, Button, Pagination, Modal } from "react-bootstrap";
+import { FaSync, FaEye, FaSearch } from "react-icons/fa";
 
 const StatusPengaduan = () => {
-    const [originalData, setOriginalData] = useState([]);
-    const [filteredData, setFilteredData] = useState([]);
+    const [data, setData] = useState([]);
+    const [error, setError] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isProcess, setIsProcess] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [selectedData, setSelectedData] = useState(null);
     const [showModal, setShowModal] = useState(false);
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(10);
-    const [isProcessing, setIsProcessing] = useState(false);
+    const itemsPerPage = 50;
+    const tableRef = useRef(null);
 
-    const [searchQuery, setSearchQuery] = useState("");
-    const [filterAlphabet, setFilterAlphabet] = useState("");
-    const [filterDate, setFilterDate] = useState("");
-    const [filterStatus, setFilterStatus] = useState("");
-
-    useEffect(() => {
-        fetchReports(); 
-    }, []);
-
-    const fetchReports = async () => {
+    const fetchData = async () => {
         try {
-            setLoading(true);
-            setError("");
-            const response = await axios.get("http://localhost:3000/api/reports/all");
-
-            console.log("Fetched Reports:", response.data);
-
+            const response = await axios.get("http://localhost:3000/api/report/all");
             if (response.data && response.data.data) {
-                setOriginalData(response.data.data);
-                setFilteredData(response.data.data);
+                setData(response.data.data);
             } else {
-                throw new Error("Data tidak ditemukan.");
+                throw new Error("Data Tidak Ditemukan");
             }
         } catch (error) {
-            setError("Gagal mengambil data. Silakan coba lagi.");
-        } finally {
-            setLoading(false);
+            console.error("Error fetching data:", error);
+            setError("Gagal Mengambil Data, Silahkan Coba Lagi.");
         }
     };
-
-    const applyFilters = useCallback(() => {
-        let filtered = [...originalData];
-
-        if (searchQuery) {
-            filtered = filtered.filter((item) =>
-                item.nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                item.email?.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-        }
-
-        if (filterAlphabet) {
-            filtered = filtered.filter((item) =>
-                item.nama?.toLowerCase().startsWith(filterAlphabet.toLowerCase())
-            );
-        }
-
-        if (filterDate) {
-            filtered = filtered.filter((item) =>
-                item.tanggal_laporan && item.tanggal_laporan.includes(filterDate)
-            );
-        }
-
-        if (filterStatus) {
-            filtered = filtered.filter((item) =>
-                item.status === filterStatus
-            );
-        }
-
-        setFilteredData(filtered);
-
-        const totalPages = Math.ceil(filtered.length / itemsPerPage);
-        if (currentPage > totalPages && totalPages > 0) {
-            setCurrentPage(1);
-        }
-    }, [originalData, searchQuery, filterAlphabet, filterDate, filterStatus, currentPage, itemsPerPage]);
 
     useEffect(() => {
-        if (originalData.length > 0) {
-            applyFilters();
+        fetchData();
+    
+        const interval = setInterval(() => {
+            fetchData();
+        }, 2000);
+    
+        return () => clearInterval(interval);
+    }, []);
+    
+
+    useEffect(() => {
+        if (tableRef.current) {
+            tableRef.current.scrollTop = 0;
         }
-    }, [searchQuery, filterAlphabet, filterDate, filterStatus, applyFilters]);
+    }, [currentPage]);
 
-    const handleShow = (item) => {
-        setSelectedData(item);
-        setShowModal(true);
-        setIsProcessing(false);
-    };
-
-    const handleClose = () => {
-        setShowModal(false);
-        setSelectedData(null);
-    };
-
+    
     const handleProses = async () => {
         if (!selectedData) return;
-
+    
         try {
-            const response = await axios.put(`http://localhost:3000/api/report/crime/${selectedData.id}`, { status: "Diproses" });
-
+            const response = await axios.put(
+                `http://localhost:3000/api/report/crime/${selectedData.id}`, 
+                { status: "Diproses" }
+            );
+    
+            console.log("Response dari server:", response);
+    
             if (response.status === 200) {
-                const updatedItem = { ...selectedData, status: "Diproses" };
-                
-                setOriginalData(prevData =>
-                    prevData.map(item =>
-                        item.id === selectedData.id ? updatedItem : item
-                    )
-                );
-                
-                setFilteredData(prevFiltered =>
-                    prevFiltered.map(item =>
-                        item.id === selectedData.id ? updatedItem : item
-                    )
-                );
-                
+                // Update status langsung di selectedData agar UI berubah
+                setSelectedData(prev => ({ ...prev, status: "Diproses" }));
+    
                 setShowSuccessModal(true);
                 setShowModal(false);
+            } else {
+                alert("Gagal memperbarui status. Server tidak mengembalikan status 200.");
             }
         } catch (error) {
             console.error("Gagal memperbarui status:", error);
             alert("Gagal memperbarui status. Silakan coba lagi.");
         }
     };
+    
+    
+    const searchedData = data.filter((item) =>
+        item.id.toString().includes(searchQuery) ||
+        item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.alamat.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-    const handleCopy = (text) => {
-        navigator.clipboard.writeText(text);
-        alert(`Teks berhasil disalin: ${text}`);
+    const totalPages = Math.max(Math.ceil(searchedData.length / itemsPerPage), 1);
+    const currentItems = searchedData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const handleShowModal = (item) => {
+        setSelectedData(item);
+        setShowModal(true);
     };
 
-    const handleRefresh = () => {
-        fetchReports();
-        setSearchQuery("");
-        setFilterAlphabet("");
-        setFilterDate("");
-        setFilterStatus("");
-        setCurrentPage(1); // Reset ke halaman pertama saat refresh
+    const handleCloseModal = () => {
+        setShowModal(false);
     };
 
-    const paginate = (pageNumber) => {
-        // Periksa jika pageNumber valid
-        const maxPage = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-        if (pageNumber >= 1 && pageNumber <= maxPage) {
-            setCurrentPage(pageNumber);
-        }
-    };
 
-    const getPaginatedData = () => {
-        const indexOfLastItem = currentPage * itemsPerPage;
-        const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-        
-        // Pastikan slice berada dalam rentang data yang valid
-        if (filteredData.length > 0 && indexOfFirstItem >= filteredData.length) {
-            // Jika start index melebihi jumlah data, kembali ke halaman 1
-            setCurrentPage(1);
-            return filteredData.slice(0, itemsPerPage);
-        }
-        return filteredData.slice(indexOfFirstItem, indexOfLastItem);
-    };
-
-    const currentItems = getPaginatedData();
-
-    const renderPagination = () => {
-        const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-        
-        if (totalPages <= 1) {
-            return null; // Tidak perlu pagination jika hanya ada 1 halaman
-        }
-        
-        return (
-            <Pagination className="justify-content-center mt-2">
-                <Pagination.Prev 
-                    onClick={() => paginate(currentPage - 1)} 
-                    disabled={currentPage === 1}
-                />
-                
-                {[...Array(totalPages)].map((_, index) => {
-                    const pageNumber = index + 1;
-                    return (
-                        <Pagination.Item 
-                            key={pageNumber} 
-                            active={pageNumber === currentPage} 
-                            onClick={() => paginate(pageNumber)}
-                        >
-                            {pageNumber}
-                        </Pagination.Item>
-                    );
-                })}
-                
-                <Pagination.Next 
-                    onClick={() => paginate(currentPage + 1)} 
-                    disabled={currentPage === totalPages}
-                />
-            </Pagination>
-        );
-    };
 
     return (
         <>
             <HeaderStatusPengaduan />
             <div className="container">
-            {error && <Alert variant="danger">{error}</Alert>}
+                {error && <p className="text-danger">{error}</p>}
 
-            {/* Search & Filter Bar */}
-            <Row className="mb-2 d-flex flex-wrap align-items-center">
-                <Col md={4} sm={12} className="mb-2">
-                    <InputGroup>
-                        <InputGroup.Text style={{height: "48px", marginTop: "24px"}}>
-                            <FaSearch style={{ fontSize: "14px" }} />
-                        </InputGroup.Text>
-                        <Form.Control
-                            type="text"
-                            placeholder="Cari nama atau email"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </InputGroup>
-                </Col>
-                <Col md={3} sm={6} className="mb-2">
-                    <InputGroup>
-                        <InputGroup.Text style={{height: "48px", marginTop: "24px"}}>
-                            <FaFilter style={{ fontSize: "14px" }} />
-                        </InputGroup.Text>
-                        <Form.Control
-                            type="date"
-                            value={filterDate}
-                            onChange={(e) => setFilterDate(e.target.value)}
-                        />
-                    </InputGroup>
-                </Col>
-                <Col md={2} className="text-end">
-                    <Button onClick={handleRefresh} variant="primary">
-                        <FaSync style={{ fontSize: "14px" }} /> Refresh
+                {/* Filter, Pencarian, dan Refresh */}
+                <div className="d-flex justify-content-between align-items-center">
+                    <Button onClick={fetchData} variant="primary">
+                        <FaSync /> Refresh
                     </Button>
-                </Col>
-            </Row>
 
-            {/* Data Table with Scroll */}
-            {loading ? (
-                <div className="text-center mt-3">
-                    <Spinner animation="border" role="status" />
-                    <p>Memuat data...</p>
+                    <div className="d-flex align-items-center">
+                        <div className="d-flex align-items-center">
+                            <FaSearch className="me-2" />
+                            <Form.Control
+                                type="text"
+                                placeholder="Cari ID, Nama, Email, Alamat"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                style={{ width: "300px" }}
+                            />
+                        </div>
+                    </div>
                 </div>
-            ) : currentItems.length > 0 ? (
-                <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px" }}>
-                    <Table striped bordered hover responsive>
-                        <thead className="table-dark text-center">
+
+                {/* Scrollable Table */}
+                <div
+                    className="table-responsive"
+                    style={{ maxHeight: "400px", overflowY: "auto" }}
+                    ref={tableRef}
+                >
+                    <Table striped bordered hover>
+                        <thead
+                            className="table-dark text-center"
+                            style={{ position: "sticky", top: 0, zIndex: 10, backgroundColor: "#343a40" }}
+                        >
                             <tr>
                                 <th>ID</th>
                                 <th>Nama</th>
@@ -263,79 +145,101 @@ const StatusPengaduan = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map((item) => (
-                                <tr key={item.id} onClick={() => handleShow(item)} className="text-center">
-                                    <td>{item.id}</td>
-                                    <td>{item.nama}</td>
-                                    <td>{item.email}</td>
-                                    <td>{item.alamat ? `${item.alamat.substring(0, 15)}...` : "-"}</td>
-                                    <td>{item.deskripsi ? `${item.deskripsi.substring(0, 30)}...` : "-"}</td>
-                                    <td>{item.tanggal_laporan ? item.tanggal_laporan.substring(0, 10) : "-"}</td>
-                                    <td>
-                                        <span className={`badge ${item.status === "Diproses" ? "bg-success" : "bg-warning"}`}>
-                                            {item.status}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <Button variant="info" size="sm" onClick={() => handleShow(item)}>
-                                            Detail
-                                        </Button>
+                            {currentItems.length > 0 ? (
+                                currentItems.map((item, index) => (
+                                    <tr key={`${item.id}-${index}`} className="text-center">
+                                        <td>{item.id}</td>
+                                        <td>{item.nama ? `${item.nama.substring(0, 10)}...` : "_"}</td>
+                                        <td>{item.email ? `${item.email.substring(0, 10)}...` : "_"}</td>
+                                        <td>{item.alamat ? `${item.alamat.substring(0, 15)}...` : "-"}</td>
+                                        <td>{item.deskripsi ? `${item.deskripsi.substring(0, 30)}...` : "-"}</td>
+                                        <td>{item.tanggal_laporan ? item.tanggal_laporan.substring(0, 10) : "-"}</td>
+                                        <td>
+                                            <span className={`badge ${item.status === "Diproses" ? "bg-success" : "bg-warning"}`}>
+                                                {item.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <Button variant="info" size="sm" onClick={() => handleShowModal(item)}>
+                                                <FaEye /> Detail
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="8" className="text-center text-muted">
+                                        Tidak ada data yang ditemukan.
                                     </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </Table>
                 </div>
-            ) : (
-                <p className="text-center text-muted mt-3">Tidak ada data pengaduan yang ditemukan.</p>
-            )}
-            
 
-            <Pagination className="justify-content-center mt-2">
-                {renderPagination()}
-            </Pagination>
+                {/* Pagination */}
+                <Pagination className="justify-content-center mt-3">
+                    <Pagination.Prev
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                    >
+                        Prev
+                    </Pagination.Prev>
 
-            {/* Modal untuk menampilkan detail data */}
-            <Modal show={showModal} onHide={handleClose}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Detail Pengaduan</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {selectedData ? (
-                        <div>
-                            <p><strong>ID:</strong> {selectedData.id}</p>
-                            <p><strong>Nama:</strong> {selectedData.nama}</p>
-                            <p>
-                                <strong>Email:</strong> {selectedData.email}
-                                <Button size="sm" className="ms-2" onClick={()=>handleCopy(selectedData.email)}><FaCopy /></Button>
-                            </p>
-                            <p>
-                                <strong>Nomor Hp:</strong> {selectedData.nomor_telepon || "-"}
-                                <Button size="sm" className="ms-2" onClick={()=>handleCopy(selectedData.nomor_telepon)}><FaCopy /></Button>
-                            </p>
-                            <p><strong>Alamat:</strong> {selectedData.alamat || "-"}</p>
-                            <p><strong>Deskripsi:</strong> {selectedData.deskripsi || "-"}</p>
-                            <p><strong>Tanggal:</strong> {selectedData.tanggal_laporan || "-"}</p>
-                            <p><strong>Status:</strong> <span className={`badge ${selectedData.status === "Diproses" ? "bg-success" : "bg-warning"}`}>{selectedData.status}</span></p>
-                        </div>
-                    ) : (
-                        <p>Data tidak ditemukan.</p>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
+                    {[...Array(totalPages)].map((_, index) => (
+                        <Pagination.Item
+                            key={index}
+                            active={index + 1 === currentPage}
+                            onClick={() => setCurrentPage(index + 1)}
+                        >
+                            {index + 1}
+                        </Pagination.Item>
+                    ))}
+
+                    <Pagination.Next
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                    >
+                        Next
+                    </Pagination.Next>
+                </Pagination>
+
+                {/* Modal Box untuk Detail */}
+                <Modal show={showModal} onHide={handleCloseModal} centered>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Detail Pengaduan</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {selectedData ? (
+                            <div>
+                                <p><strong>ID:</strong> {selectedData.id}</p>
+                                <p><strong>Nama:</strong> {selectedData.nama}</p>
+                                <p><strong>Email:</strong> {selectedData.email}</p>
+                                <p><strong>Alamat:</strong> {selectedData.alamat || "-"}</p>
+                                <p><strong>Deskripsi:</strong> {selectedData.deskripsi || "-"}</p>
+                                <p><strong>Tanggal:</strong> {selectedData.tanggal_laporan || "-"}</p>
+                                <p>
+                                    <strong>Status:</strong>{" "}
+                                    <span className={`badge ${selectedData.status === "Diproses" ? "bg-success" : "bg-warning"}`}>
+                                        {selectedData.status}
+                                    </span>
+                                </p>
+                            </div>
+                        ) : (
+                            <p>Data tidak ditemukan.</p>
+                        )}
+                    </Modal.Body>
+                    <Modal.Footer>
                     {selectedData && selectedData.status !== "Diproses" && (
                         <Button variant="success" onClick={handleProses}>
                             Proses
                         </Button>
                     )}
-                    <Button variant="secondary" onClick={handleClose}>
-                        Tutup
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-            
+                        <Button variant="secondary" onClick={handleCloseModal}>Tutup</Button>
+                    </Modal.Footer>
+                </Modal>
 
-            <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
+                <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Berhasil!</Modal.Title>
                 </Modal.Header>
@@ -346,9 +250,7 @@ const StatusPengaduan = () => {
                     <Button variant="success" onClick={() => setShowSuccessModal(false)}>OK</Button>
                 </Modal.Footer>
             </Modal>
-
-        </div>
-
+            </div>
         </>
     );
 };
