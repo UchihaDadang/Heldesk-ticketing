@@ -11,6 +11,7 @@ const TindakanKejahatan = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedData, setSelectedData] = useState(null);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const itemsPerPage = 50;
     const tableRef = useRef(null);
@@ -40,6 +41,46 @@ const TindakanKejahatan = () => {
             tableRef.current.scrollTop = 0;
         }
     }, [currentPage]);
+
+    const handleProses = async () => {
+            if (!selectedData || !selectedData.type) return;
+        
+            try {
+                const formattedType = selectedData.type.toLowerCase().replace(/ /g, '_');
+                
+                let payload;
+                if (selectedData.status === "Menunggu") {
+                    payload = { action: "proses" };
+                } else if (selectedData.status === "Diproses") {
+                    payload = { action: "selesai" };
+                } else {
+                    alert("Status laporan tidak valid untuk diproses");
+                    return;
+                }
+                
+                const response = await axios.put(
+                    `http://localhost:3000/api/report/${formattedType}/${selectedData.id}`,
+                    payload
+                );
+        
+                console.log("Response dari server:", response);
+        
+                if (response.status === 200) {
+                    const newStatus = selectedData.status === "Menunggu" ? "Diproses" : "Selesai";
+                    setSelectedData(prev => ({ ...prev, status: newStatus }));
+                    setShowSuccessModal(true);
+                    setShowModal(false);
+                } else {
+                    alert("Gagal memperbarui status. Server tidak mengembalikan status 200.");
+                }
+            } catch (error) {
+                console.error("Gagal memperbarui status:", error);
+                console.log("Error details:", error.response?.data);
+                
+                const errorMessage = error.response?.data?.message || error.message;
+                alert(`Gagal memperbarui status: ${errorMessage}`);
+            }
+        };
 
     const filteredData = data.filter(
         (item) => filterStatus === "Diproses" || item.status === filterStatus
@@ -201,14 +242,6 @@ const TindakanKejahatan = () => {
             </div>
 
             <>
-                {/* Tombol Detail */}
-                <Button
-                    variant="info"
-                    size="sm"
-                    onClick={() => handleShowModal(item)}
-                >
-                    <FaEye /> Detail
-                </Button>
 
                 {/* Modal Box untuk Detail */}
                 <Modal show={showModal} onHide={handleCloseModal} centered>
@@ -236,7 +269,24 @@ const TindakanKejahatan = () => {
                         )}
                     </Modal.Body>
                     <Modal.Footer>
+                    {selectedData && selectedData.status !== "Selesai" && (
+                         <Button variant="primary" onClick={handleProses}>
+                             Selesai
+                         </Button>
+                     )}                       
                         <Button variant="secondary" onClick={handleCloseModal}>Tutup</Button>
+                    </Modal.Footer>
+                </Modal>
+
+                <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Berhasil!</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <p>Status pengaduan <b>"Selesai"</b>.</p>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="success" onClick={() => setShowSuccessModal(false)}>OK</Button>
                     </Modal.Footer>
                 </Modal>
             </>

@@ -125,7 +125,7 @@ const handlerSubmitReport = async (request, h) => {
         }
 
         const statusKey = "`status`";
-        const statusValue = "Menunggu"; // Nilai default
+        const statusValue = "Menunggu";
 
         let dbColumns = Object.keys(data).map(key => `\`${columnMapping[key] || key}\``);
         let values = Object.values(data);
@@ -195,18 +195,15 @@ const handlerGetAllReports = async (request, h) => {
 
 const handlerGetCrimeReports = async (request, h) => {
     try {
-        // Ambil hanya data dengan status "Diproses" dan "Selesai"
         const [rows] = await pool.execute(
             'SELECT *, "Crime" AS type FROM crime_reports WHERE status IN (?, ?) ORDER BY tanggal_laporan DESC',
             ["Diproses", "Selesai"]
         );
 
-        // Jika tidak ada data, kembalikan array kosong
         if (rows.length === 0) {
             return h.response({ data: [] }).code(200);
         }
 
-        // Kembalikan data jika ada
         return h.response({ data: rows }).code(200);
     } catch (error) {
         console.error("Error in handlerGetCrimeReports:", error);
@@ -214,266 +211,69 @@ const handlerGetCrimeReports = async (request, h) => {
     }
 };
 
-const handlerUpdateCrimeReportStatus = async (request, h) => {
+const handlerUpdateReportStatus = async (request, h) => {
     try {
-        const { id } = request.params;
+        const { id, type } = request.params;
+        const { action } = request.payload; // Menambahkan parameter action dari payload
 
+        const tableMap = {
+            crime: "crime_reports",
+            bullying: "bullying_reports",
+            missing: "missing_reports",
+            domestic_violence: "domestic_violence_reports",
+            suspicious_activity: "suspicious_activity_reports"
+        };
+
+        const tableName = tableMap[type.toLowerCase()];
+
+        if (!tableName) {
+            return h.response({ message: "Jenis laporan tidak valid" }).code(400);
+        }
+
+        // Mendapatkan status laporan saat ini
+        const [rows] = await pool.execute(
+            `SELECT status FROM ${tableName} WHERE id = ?`,
+            [id]
+        );
+
+        if (rows.length === 0) {
+            return h.response({ message: "Laporan tidak ditemukan" }).code(404);
+        }
+
+        const currentStatus = rows[0].status;
+        let newStatus;
+
+        // Menentukan status baru berdasarkan status saat ini atau parameter action
+        if (action === "proses" && currentStatus === "Menunggu") {
+            newStatus = "Diproses";
+        } else if (action === "selesai" && currentStatus === "Diproses") {
+            newStatus = "Selesai";
+        } else {
+            return h.response({ 
+                message: "Perubahan status tidak valid. Hanya dapat mengubah dari Menunggu ke Diproses atau dari Diproses ke Selesai" 
+            }).code(400);
+        }
+
+        // Update status
         const [result] = await pool.execute(
-            'UPDATE crime_reports SET status = ? WHERE id = ?',
-            ['Diproses', id]
+            `UPDATE ${tableName} SET status = ? WHERE id = ?`,
+            [newStatus, id]
         );
 
         if (result.affectedRows === 0) {
-            console.log('No record updated for ID:', id);
-            return h.response({ message: 'Laporan tidak ditemukan' }).code(404);
+            return h.response({ message: "Gagal memperbarui status laporan" }).code(500);
         }
 
-        return h.response({ message: 'Status laporan berhasil diperbarui' }).code(200);
+        return h.response({ 
+            message: `Status laporan berhasil diperbarui menjadi ${newStatus}` 
+        }).code(200);
     } catch (error) {
-        console.error('Error in handlerUpdateCrimeReportStatus:', error);
-        return h.response({ message: 'Internal server error' }).code(500);
+        console.error("Error updating report status:", error);
+        return h.response({ message: "Internal server error" }).code(500);
     }
 };
 
 
-
-// const handlerGetMissingReports = async (request, h) => {
-//     try {
-//         const { page = 1, limit = 10 } = request.query;
-//         const offset = (page - 1) * limit;
-        
-//         const [rows] = await pool.execute(
-//             'SELECT * FROM missing_reports ORDER BY created_at DESC LIMIT ? OFFSET ?',
-//             [parseInt(limit), parseInt(offset)]
-//         );
-        
-//         const [countResult] = await pool.execute('SELECT COUNT(*) as total FROM missing_reports');
-//         const total = countResult[0].total;
-        
-//         return {
-//             data: rows,
-//             pagination: {
-//                 page: parseInt(page),
-//                 limit: parseInt(limit),
-//                 total,
-//                 totalPages: Math.ceil(total / limit)
-//             }
-//         };
-//     } catch (error) {
-//         console.error('Error in handlerGetMissingReports:', error);
-//         return h.response({ message: 'Internal server error' }).code(500);
-//     }
-// };
-
-// const handlerGetDomesticViolenceReports = async (request, h) => {
-//     try {
-//         const { page = 1, limit = 10 } = request.query;
-//         const offset = (page - 1) * limit;
-        
-//         const [rows] = await pool.execute(
-//             'SELECT * FROM domestic_violence_reports ORDER BY created_at DESC LIMIT ? OFFSET ?',
-//             [parseInt(limit), parseInt(offset)]
-//         );
-        
-//         const [countResult] = await pool.execute('SELECT COUNT(*) as total FROM domestic_violence_reports');
-//         const total = countResult[0].total;
-        
-//         return {
-//             data: rows,
-//             pagination: {
-//                 page: parseInt(page),
-//                 limit: parseInt(limit),
-//                 total,
-//                 totalPages: Math.ceil(total / limit)
-//             }
-//         };
-//     } catch (error) {
-//         console.error('Error in handlerGetDomesticViolenceReports:', error);
-//         return h.response({ message: 'Internal server error' }).code(500);
-//     }
-// };
-
-// const handlerGetBullyingReports = async (request, h) => {
-//     try {
-//         const { page = 1, limit = 10 } = request.query;
-//         const offset = (page - 1) * limit;
-        
-//         const [rows] = await pool.execute(
-//             'SELECT * FROM bullying_reports ORDER BY created_at DESC LIMIT ? OFFSET ?',
-//             [parseInt(limit), parseInt(offset)]
-//         );
-        
-//         const [countResult] = await pool.execute('SELECT COUNT(*) as total FROM bullying_reports');
-//         const total = countResult[0].total;
-        
-//         return {
-//             data: rows,
-//             pagination: {
-//                 page: parseInt(page),
-//                 limit: parseInt(limit),
-//                 total,
-//                 totalPages: Math.ceil(total / limit)
-//             }
-//         };
-//     } catch (error) {
-//         console.error('Error in handlerGetBullyingReports:', error);
-//         return h.response({ message: 'Internal server error' }).code(500);
-//     }
-// };
-
-// const handlerGetSuspiciousActivityReports = async (request, h) => {
-//     try {
-//         const { page = 1, limit = 10 } = request.query;
-//         const offset = (page - 1) * limit;
-        
-//         const [rows] = await pool.execute(
-//             'SELECT * FROM suspicious_activity_reports ORDER BY created_at DESC LIMIT ? OFFSET ?',
-//             [parseInt(limit), parseInt(offset)]
-//         );
-        
-//         const [countResult] = await pool.execute('SELECT COUNT(*) as total FROM suspicious_activity_reports');
-//         const total = countResult[0].total;
-        
-//         return {
-//             data: rows,
-//             pagination: {
-//                 page: parseInt(page),
-//                 limit: parseInt(limit),
-//                 total,
-//                 totalPages: Math.ceil(total / limit)
-//             }
-//         };
-//     } catch (error) {
-//         console.error('Error in handlerGetSuspiciousActivityReports:', error);
-//         return h.response({ message: 'Internal server error' }).code(500);
-//     }
-// };
-
-// const handlerGetFeedback = async (request, h) => {
-//     try {
-//         const { page = 1, limit = 10 } = request.query;
-//         const offset = (page - 1) * limit;
-        
-//         const [rows] = await pool.execute(
-//             'SELECT * FROM feedback ORDER BY created_at DESC LIMIT ? OFFSET ?',
-//             [parseInt(limit), parseInt(offset)]
-//         );
-        
-//         const [countResult] = await pool.execute('SELECT COUNT(*) as total FROM feedback');
-//         const total = countResult[0].total;
-        
-//         return {
-//             data: rows,
-//             pagination: {
-//                 page: parseInt(page),
-//                 limit: parseInt(limit),
-//                 total,
-//                 totalPages: Math.ceil(total / limit)
-//             }
-//         };
-//     } catch (error) {
-//         console.error('Error in handlerGetFeedback:', error);
-//         return h.response({ message: 'Internal server error' }).code(500);
-//     }
-// };
-
-// // const handlerGetReportStatistics = async (request, h) => {
-// //     try {
-// //         const [crimeStat] = await pool.execute('SELECT COUNT(*) as total FROM crime_reports');
-// //         const [missingStat] = await pool.execute('SELECT COUNT(*) as total FROM missing_reports');
-// //         const [dvStat] = await pool.execute('SELECT COUNT(*) as total FROM domestic_violence_reports');
-// //         const [bullyStat] = await pool.execute('SELECT COUNT(*) as total FROM bullying_reports');
-// //         const [suspiciousStat] = await pool.execute('SELECT COUNT(*) as total FROM suspicious_activity_reports');
-// //         const [feedbackStat] = await pool.execute('SELECT COUNT(*) as total FROM feedback');
-        
-// //         const [latestCrimes] = await pool.execute('SELECT * FROM crime_reports ORDER BY created_at DESC LIMIT 5');
-// //         const [latestMissing] = await pool.execute('SELECT * FROM missing_reports ORDER BY created_at DESC LIMIT 5');
-        
-// //         return {
-// //             statistics: {
-// //                 crimeReports: crimeStat[0].total,
-// //                 missingReports: missingStat[0].total,
-// //                 domesticViolenceReports: dvStat[0].total,
-// //                 bullyingReports: bullyStat[0].total,
-// //                 suspiciousActivityReports: suspiciousStat[0].total,
-// //                 feedback: feedbackStat[0].total,
-// //                 total: crimeStat[0].total + missingStat[0].total + dvStat[0].total + 
-// //                        bullyStat[0].total + suspiciousStat[0].total + feedbackStat[0].total
-// //             },
-// //             latestReports: {
-// //                 crimes: latestCrimes,
-// //                 missing: latestMissing
-// //             }
-// //         };
-// //     } catch (error) {
-// //         console.error('Error in handlerGetReportStatistics:', error);
-// //         return h.response({ message: 'Internal server error' }).code(500);
-// //     }
-// // };
-
-// const handlerSearchReports = async (request, h) => {
-//     try {
-//         const { keyword, category, page = 1, limit = 10 } = request.query;
-//         const offset = (page - 1) * limit;
-        
-//         let tableName, searchColumns;
-        
-//         switch (category) {
-//             case "crime":
-//                 tableName = "crime_reports";
-//                 searchColumns = ["nama", "email", "alamat", "deskripsi_tindak_kejahatan"];
-//                 break;
-//             case "missing":
-//                 tableName = "missing_reports";
-//                 searchColumns = ["nama", "email", "deskripsi_kehilangan"];
-//                 break;
-//             case "domestic":
-//                 tableName = "domestic_violence_reports";
-//                 searchColumns = ["nama", "alamat", "nama_pelaku", "deskripsi_kdrt"];
-//                 break;
-//             case "bullying":
-//                 tableName = "bullying_reports";
-//                 searchColumns = ["nama", "asal_sekolah", "nama_pelaku", "deskripsi_bullying"];
-//                 break;
-//             case "suspicious":
-//                 tableName = "suspicious_activity_reports";
-//                 searchColumns = ["nama", "alamat", "deskripsi_mencurigakan"];
-//                 break;
-//             case "feedback":
-//                 tableName = "feedback";
-//                 searchColumns = ["kritik", "saran", "komentar"];
-//                 break;
-//             default:
-//                 return h.response({ message: "Kategori tidak valid" }).code(400);
-//         }
-        
-//         const searchConditions = searchColumns.map(column => `${column} LIKE ?`).join(" OR ");
-//         const searchValues = searchColumns.map(() => `%${keyword}%`);
-        
-//         const query = `SELECT * FROM ${tableName} WHERE ${searchConditions} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
-//         const [rows] = await pool.execute(
-//             query,
-//             [...searchValues, parseInt(limit), parseInt(offset)]
-//         );
-        
-//         const countQuery = `SELECT COUNT(*) as total FROM ${tableName} WHERE ${searchConditions}`;
-//         const [countResult] = await pool.execute(countQuery, searchValues);
-//         const total = countResult[0].total;
-        
-//         return {
-//             data: rows,
-//             pagination: {
-//                 page: parseInt(page),
-//                 limit: parseInt(limit),
-//                 total,
-//                 totalPages: Math.ceil(total / limit)
-//             }
-//         };
-//     } catch (error) {
-//         console.error('Error in handlerSearchReports:', error);
-//         return h.response({ message: 'Internal server error' }).code(500);
-//     }
-// };
 
 export { 
     handlerLoginAdmin, 
@@ -481,12 +281,5 @@ export {
     handlerSubmitReport,
     handlerGetAllReports,
     handlerGetCrimeReports,
-    handlerUpdateCrimeReportStatus,
-    // handlerGetMissingReports,
-    // handlerGetDomesticViolenceReports,
-    // handlerGetBullyingReports,
-    // handlerGetSuspiciousActivityReports,
-    // handlerGetFeedback,
-    // // handlerGetReportStatistics,
-    // handlerSearchReports
+    handlerUpdateReportStatus,
 };

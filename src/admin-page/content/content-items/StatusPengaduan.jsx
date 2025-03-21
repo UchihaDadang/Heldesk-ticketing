@@ -49,20 +49,31 @@ const StatusPengaduan = () => {
 
     
     const handleProses = async () => {
-        if (!selectedData) return;
+        if (!selectedData || !selectedData.type) return;
     
         try {
+            const formattedType = selectedData.type.toLowerCase().replace(/ /g, '_');
+            
+            let payload;
+            if (selectedData.status === "Menunggu") {
+                payload = { action: "proses" };
+            } else if (selectedData.status === "Diproses") {
+                payload = { action: "selesai" };
+            } else {
+                alert("Status laporan tidak valid untuk diproses");
+                return;
+            }
+            
             const response = await axios.put(
-                `http://localhost:3000/api/report/crime/${selectedData.id}`, 
-                { status: "Diproses" }
+                `http://localhost:3000/api/report/${formattedType}/${selectedData.id}`,
+                payload
             );
     
             console.log("Response dari server:", response);
     
             if (response.status === 200) {
-                // Update status langsung di selectedData agar UI berubah
-                setSelectedData(prev => ({ ...prev, status: "Diproses" }));
-    
+                const newStatus = selectedData.status === "Menunggu" ? "Diproses" : "Selesai";
+                setSelectedData(prev => ({ ...prev, status: newStatus }));
                 setShowSuccessModal(true);
                 setShowModal(false);
             } else {
@@ -70,10 +81,12 @@ const StatusPengaduan = () => {
             }
         } catch (error) {
             console.error("Gagal memperbarui status:", error);
-            alert("Gagal memperbarui status. Silakan coba lagi.");
+            console.log("Error details:", error.response?.data);
+            
+            const errorMessage = error.response?.data?.message || error.message;
+            alert(`Gagal memperbarui status: ${errorMessage}`);
         }
     };
-    
     
     const searchedData = data.filter((item) =>
         item.id.toString().includes(searchQuery) ||
@@ -93,8 +106,6 @@ const StatusPengaduan = () => {
     const handleCloseModal = () => {
         setShowModal(false);
     };
-
-
 
     return (
         <>
@@ -240,16 +251,16 @@ const StatusPengaduan = () => {
                 </Modal>
 
                 <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Berhasil!</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <p>Status pengaduan berhasil <b>"Diproses"</b>.</p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="success" onClick={() => setShowSuccessModal(false)}>OK</Button>
-                </Modal.Footer>
-            </Modal>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Berhasil!</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <p>Status pengaduan berhasil <b>"Diproses"</b>.</p>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="success" onClick={() => setShowSuccessModal(false)}>OK</Button>
+                    </Modal.Footer>
+                </Modal>
             </div>
         </>
     );

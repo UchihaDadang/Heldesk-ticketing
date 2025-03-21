@@ -25,7 +25,6 @@ const init = async () => {
             request.headers.cookie = undefined;
         }
 
-        console.log('Incoming Cookies:', request.headers.cookie); 
         return h.continue;
     });
 
