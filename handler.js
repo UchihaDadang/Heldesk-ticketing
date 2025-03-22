@@ -37,7 +37,6 @@ const handlerLoginAdmin = async (request, h) => {
     }
 };
 
-
 const handlerLoginUser = async (request, h) => {
     try {
         const { credential } = request.payload;
@@ -74,7 +73,6 @@ const handlerLoginUser = async (request, h) => {
         return h.response({ message: 'Internal server error' }).code(500);
     }
 };
-
 
 const handlerSubmitReport = async (request, h) => {
     try {
@@ -214,7 +212,7 @@ const handlerGetCrimeReports = async (request, h) => {
 const handlerUpdateReportStatus = async (request, h) => {
     try {
         const { id, type } = request.params;
-        const { action } = request.payload; // Menambahkan parameter action dari payload
+        const { action } = request.payload;
 
         const tableMap = {
             crime: "crime_reports",
@@ -230,7 +228,6 @@ const handlerUpdateReportStatus = async (request, h) => {
             return h.response({ message: "Jenis laporan tidak valid" }).code(400);
         }
 
-        // Mendapatkan status laporan saat ini
         const [rows] = await pool.execute(
             `SELECT status FROM ${tableName} WHERE id = ?`,
             [id]
@@ -243,7 +240,6 @@ const handlerUpdateReportStatus = async (request, h) => {
         const currentStatus = rows[0].status;
         let newStatus;
 
-        // Menentukan status baru berdasarkan status saat ini atau parameter action
         if (action === "proses" && currentStatus === "Menunggu") {
             newStatus = "Diproses";
         } else if (action === "selesai" && currentStatus === "Diproses") {
@@ -254,7 +250,6 @@ const handlerUpdateReportStatus = async (request, h) => {
             }).code(400);
         }
 
-        // Update status
         const [result] = await pool.execute(
             `UPDATE ${tableName} SET status = ? WHERE id = ?`,
             [newStatus, id]
@@ -273,6 +268,83 @@ const handlerUpdateReportStatus = async (request, h) => {
     }
 };
 
+const handlerDeleteCompliteReport = async (request, h) => {
+    try {
+        const { type, id } = request.params;
+
+        const tableMap = {
+            crime: "crime_reports",
+            bullying: "bullying_reports",
+            missing: "missing_reports",
+            domestic_violence: "domestic_violence_reports",
+            suspicious_activity: "suspicious_activity_reports"
+        };
+
+        const tableName = tableMap[type.toLowerCase()];
+        if (!tableName) {
+            return h.response({ message: "Jenis laporan tidak valid" }).code(400);
+        }
+
+        const result = await pool.execute(
+            `DELETE FROM ${tableName} WHERE id = ? AND status = ?`,
+            [id, "Selesai"]
+        );
+
+        if (!Array.isArray(result) || result.length === 0) {
+            return h.response({ message: "Gagal menghapus laporan" }).code(500);
+        }
+
+        const affectedRows = result[0].affectedRows;
+        if (affectedRows === 0) {
+            return h.response({ message: "Laporan tidak ditemukan atau belum berstatus 'Selesai'" }).code(404);
+        }
+
+        return h.response({ message: "Laporan berhasil dihapus" }).code(200);
+    } catch (error) {
+        console.error("Error deleting selected report:", error);
+        return h.response({ message: "Internal server error" }).code(500);
+    }
+};
+
+const handlerDeleteCompliteReportAll = async (request, h) => {
+    try {
+        const {type} = request.params;
+
+        const tableMap = {
+            crime: "crime_reports",
+            bullying: "bullying_reports",
+            missing: "missing_reports",
+            domestic_violence: "domestic_violence_reports",
+            suspicious_activity: "suspicious_activity_reports"
+        };
+
+        const tableName = tableMap[type.toLowerCase()];
+        if (!tableName) {
+            return h.response({ message: "Jenis laporan tidak valid" }).code(400);
+        }
+
+        const result = await pool.execute(
+            `DELETE FROM ${tableName} WHERE status = ?`,
+            ["Selesai"]
+        );
+
+        if (!Array.isArray(result) || result.length === 0) {
+            return h.response({ message: "Gagal menghapus laporan" }).code(500);
+        }
+
+        const affectedRows = result[0].affectedRows;
+        if (affectedRows === 0) {
+            return h.response({ message: "Laporan tidak ditemukan atau belum berstatus 'Selesai'" }).code(404);
+        }
+
+        return h.response({ message: "Laporan berhasil dihapus" }).code(200);
+    } catch (error) {
+        console.error("Error deleting selected report:", error);
+        return h.response({ message: "Internal server error" }).code(500);
+    }
+};
+
+
 
 
 export { 
@@ -282,4 +354,6 @@ export {
     handlerGetAllReports,
     handlerGetCrimeReports,
     handlerUpdateReportStatus,
+    handlerDeleteCompliteReport,
+    handlerDeleteCompliteReportAll,
 };

@@ -5,6 +5,8 @@ import {
     handlerGetAllReports,
     handlerGetCrimeReports,
     handlerUpdateReportStatus,
+    handlerDeleteCompliteReport,
+    handlerDeleteCompliteReportAll,
  } from './handler.js';
 import Joi from 'joi';
 
@@ -93,6 +95,34 @@ const routes = [
         method: "PUT",
         path: "/api/report/{type}/{id}",
         handler: handlerUpdateReportStatus,
+        options: {
+            auth: false,
+            cors: {
+                origin: ["http://localhost:5173"],
+                headers: ["Accept", "Content-Type", "Authorization"],
+                credentials: false
+            }
+        }
+    },
+    
+    {
+        method: "DELETE",
+        path: "/api/report/{type}/{id}/delete",
+        handler: handlerDeleteCompliteReport,
+        options: {
+            auth: false,
+            cors: {
+                origin: ["http://localhost:5173"],
+                headers: ["Accept", "Content-Type", "Authorization"],
+                credentials: false
+            }
+        }
+    },
+
+    {
+        method: "DELETE",
+        path: "/api/report/{type}/delete",
+        handler: handlerDeleteCompliteReportAll,
         options: {
             auth: false,
             cors: {
