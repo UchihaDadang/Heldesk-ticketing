@@ -7,6 +7,10 @@ import {
     handlerUpdateReportStatus,
     handlerDeleteCompliteReport,
     handlerDeleteCompliteReportAll,
+    handlerGetMissingReport,
+    handlerGetDomesticViolenceReport,
+    handlerGetDBulyyingReport,
+    handlerGetSuspiciousActivityReport,
  } from './handler.js';
 import Joi from 'joi';
 
@@ -87,6 +91,58 @@ const routes = [
             cors: {
                 origin: ['http://localhost:5173'],
                 headers: ['Accept', 'Content-Type', 'Authorization']
+            }
+        }
+    },
+
+    {
+        method: 'GET',
+        path: '/api/report/missing',
+        handler: handlerGetMissingReport,
+        options: {
+            auth: false,
+            cors: {
+                origin: ['http://localhost:5173'],
+                headers: ['Accept', 'Content-type', 'Authorization']
+            }
+        }
+    },
+
+    {
+        method: 'GET',
+        path: '/api/report/domestic-violence',
+        handler: handlerGetDomesticViolenceReport,
+        options: {
+            auth: false,
+            cors: {
+                origin: ['http://localhost:5173'],
+                headers: ['Accept', 'Content-type', 'Authorization']
+            }
+        }
+    },
+
+    {
+        method: 'GET',
+        path: '/api/report/bullying',
+        handler: handlerGetDBulyyingReport,
+        options: {
+            auth: false,
+            cors: {
+                origin: ['http://localhost:5173'],
+                headers: ['Accept', 'Content-type', 'Authorization']
+            }
+        }
+    },
+
+    {
+        method: 'GET',
+        path: '/api/report/suspecious-activity',
+        handler: handlerGetSuspiciousActivityReport,
+        options: {
+            auth: false,
+            cors: {
+                origin: ['http://localhost:5173'],
+                headers: ['Accept', 'Content-type', 'Authorization']
             }
         }
     },

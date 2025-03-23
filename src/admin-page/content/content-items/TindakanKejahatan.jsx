@@ -5,6 +5,7 @@ import axios from "axios";
 import { Table, Form, Button, Pagination, Modal } from "react-bootstrap";
 import { FaSync, FaEye, FaSearch } from "react-icons/fa";
 import * as XLSX from 'xlsx';
+
 const TindakanKejahatan = () => {
     const [data, setData] = useState([]);
     const [error, setError] = useState("");
@@ -404,7 +405,6 @@ const TindakanKejahatan = () => {
                 </Modal>
             </>
         </>
-        
     );
 };
 

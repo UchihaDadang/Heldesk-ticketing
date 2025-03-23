@@ -209,6 +209,78 @@ const handlerGetCrimeReports = async (request, h) => {
     }
 };
 
+const handlerGetMissingReport = async (request, h) => {
+    try {
+        const [rows] = await pool.execute(
+            'SELECT *, "Missing" AS type FROM missing_reports WHERE status IN (?, ?) ORDER BY tanggal_laporan DESC',
+            ["Diproses", "Selesai"]
+        );
+
+        if (rows.length === 0){
+            return h.response({data: []}).code(200);
+        }
+
+        return h.response({data: rows}).code(200);
+    } catch (error) {
+        console.error("Error in handlerGetMissingReport", error);
+        return h.response({ message: "Internal server error" }).code(500);
+    }
+};
+
+const handlerGetDomesticViolenceReport = async (request, h) => {
+    try {
+        const [rows] = await pool.execute(
+            'SELECT *, "Domestic Violence" AS type FROM domestic_violence_reports WHERE status IN (?, ?) ORDER BY tanggal_laporan DESC',
+            ["Diproses", "Selesai"]
+        );
+
+        if (rows.length === 0){
+            return h.response({data: []}).code(200);
+        }
+
+        return h.response({data: rows}).code(200);
+    } catch (error) {
+        console.error("Error in handlerGetMissingReport", error);
+        return h.response({ message: "Internal server error" }).code(500);
+    }
+};
+
+const handlerGetDBulyyingReport = async (request, h) => {
+    try {
+        const [rows] = await pool.execute(
+            'SELECT *, "Bullying" AS type FROM bullying_reports WHERE status IN (?, ?) ORDER BY tanggal_laporan DESC',
+            ["Diproses", "Selesai"]
+        );
+
+        if (rows.length === 0){
+            return h.response({data: []}).code(200);
+        }
+
+        return h.response({data: rows}).code(200);
+    } catch (error) {
+        console.error("Error in handlerGetMissingReport", error);
+        return h.response({ message: "Internal server error" }).code(500);
+    }
+};
+
+const handlerGetSuspiciousActivityReport = async (request, h) => {
+    try {
+        const [rows] = await pool.execute(
+            'SELECT *, "Suspicious Activity" AS type FROM suspicious_activity_reports WHERE status IN (?, ?) ORDER BY tanggal_laporan DESC',
+            ["Diproses", "Selesai"]
+        );
+
+        if (rows.length === 0){
+            return h.response({data: []}).code(200);
+        }
+
+        return h.response({data: rows}).code(200);
+    } catch (error) {
+        console.error("Error in handlerGetMissingReport", error);
+        return h.response({ message: "Internal server error" }).code(500);
+    }
+}
+
 const handlerUpdateReportStatus = async (request, h) => {
     try {
         const { id, type } = request.params;
@@ -271,18 +343,24 @@ const handlerUpdateReportStatus = async (request, h) => {
 const handlerDeleteCompliteReport = async (request, h) => {
     try {
         const { type, id } = request.params;
-
+        
+        // Create a more flexible mapping that handles spaces and casing
         const tableMap = {
-            crime: "crime_reports",
-            bullying: "bullying_reports",
-            missing: "missing_reports",
-            domestic_violence: "domestic_violence_reports",
-            suspicious_activity: "suspicious_activity_reports"
+            "crime": "crime_reports",
+            "bullying": "bullying_reports",
+            "missing": "missing_reports",
+            "domestic violence": "domestic_violence_reports", // Add with space
+            "domestic_violence": "domestic_violence_reports", // Also accept with underscore
+            "suspicious activity": "suspicious_activity_reports", // Add with space
+            "suspicious_activity": "suspicious_activity_reports" // Also accept with underscore
         };
 
-        const tableName = tableMap[type.toLowerCase()];
+        // Convert to lowercase and check both formats
+        const normalizedType = type.toLowerCase().replace(/-/g, '_');
+        const tableName = tableMap[normalizedType] || tableMap[normalizedType.replace(/_/g, ' ')];
+        
         if (!tableName) {
-            return h.response({ message: "Jenis laporan tidak valid" }).code(400);
+            return h.response({ message: "Jenis laporan tidak valid", type: type }).code(400);
         }
 
         const result = await pool.execute(
@@ -306,21 +384,28 @@ const handlerDeleteCompliteReport = async (request, h) => {
     }
 };
 
+
 const handlerDeleteCompliteReportAll = async (request, h) => {
     try {
         const {type} = request.params;
-
+        
+        // Create a more flexible mapping that handles spaces and casing
         const tableMap = {
-            crime: "crime_reports",
-            bullying: "bullying_reports",
-            missing: "missing_reports",
-            domestic_violence: "domestic_violence_reports",
-            suspicious_activity: "suspicious_activity_reports"
+            "crime": "crime_reports",
+            "bullying": "bullying_reports",
+            "missing": "missing_reports",
+            "domestic violence": "domestic_violence_reports", // Add with space
+            "domestic_violence": "domestic_violence_reports", // Also accept with underscore
+            "suspicious activity": "suspicious_activity_reports", // Add with space
+            "suspicious_activity": "suspicious_activity_reports" // Also accept with underscore
         };
 
-        const tableName = tableMap[type.toLowerCase()];
+        // Convert to lowercase and check both formats
+        const normalizedType = type.toLowerCase().replace(/-/g, '_');
+        const tableName = tableMap[normalizedType] || tableMap[normalizedType.replace(/_/g, ' ')];
+        
         if (!tableName) {
-            return h.response({ message: "Jenis laporan tidak valid" }).code(400);
+            return h.response({ message: "Jenis laporan tidak valid", type: type }).code(400);
         }
 
         const result = await pool.execute(
@@ -348,12 +433,16 @@ const handlerDeleteCompliteReportAll = async (request, h) => {
 
 
 export { 
-    handlerLoginAdmin, 
     handlerLoginUser, 
+    handlerLoginAdmin, 
     handlerSubmitReport,
     handlerGetAllReports,
     handlerGetCrimeReports,
+    handlerGetMissingReport,
+    handlerGetDBulyyingReport,
     handlerUpdateReportStatus,
     handlerDeleteCompliteReport,
     handlerDeleteCompliteReportAll,
+    handlerGetDomesticViolenceReport,
+    handlerGetSuspiciousActivityReport,
 };
