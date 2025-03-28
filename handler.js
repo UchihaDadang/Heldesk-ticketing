@@ -4,6 +4,23 @@ import pool from './connect.js';
 
 const JWT_SECRET = 'your_jwt_secret_key';
 
+const verifyToken = (request, h) => {
+    try {
+        const authorization = request.headers.authorization;
+        if (!authorization) {
+            return h.response({ message: 'Unauthorized' }).code(401);
+        }
+
+        const token = authorization.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+
+        request.auth = decoded;
+        return h.continue;
+    } catch (error) {
+        return h.response({ message: 'Invalid token' }).code(401);
+    }
+};
+
 const handlerLoginAdmin = async (request, h) => {
     try {
         const { username, password } = request.payload;
@@ -384,7 +401,6 @@ const handlerDeleteCompliteReport = async (request, h) => {
     }
 };
 
-
 const handlerDeleteCompliteReportAll = async (request, h) => {
     try {
         const {type} = request.params;
@@ -429,16 +445,212 @@ const handlerDeleteCompliteReportAll = async (request, h) => {
     }
 };
 
+const handlerGetDataToCart = async (request, h) => {
+    try {
+        const [rows] = await pool.execute(
+            `
+            SELECT 
+              'Crime' as category, COUNT(*) as count FROM crime_reports
+            UNION ALL
+            SELECT 
+              'Bullying' as category, COUNT(*) as count FROM bullying_reports
+            UNION ALL
+            SELECT 
+              'Domestic Violence' as category, COUNT(*) as count FROM domestic_violence_reports
+            UNION ALL
+            SELECT 
+              'Missing Persons' as category, COUNT(*) as count FROM missing_reports
+            UNION ALL
+            SELECT 
+              'Suspicious Activity' as category, COUNT(*) as count FROM suspicious_activity_reports
+          `
+        )
+
+        if (rows.length === 0){
+            return h.response({data: []}).code(200);
+        }
+
+        return h.response({data: rows}).code(200);
+    } catch (error) {
+        console.error("Error in handlerGetMissingReport", error);
+        return h.response({ message: "Internal server error" }).code(500);
+    }
+};
+
+const handlerGetNumberQueues = async (request, h) => {
+    try {
+        const [rows] = await pool.execute(
+            'SELECT id, title, counterCode, LPAD(queueNumber, 3, "0") AS formattedQueue FROM queues'
+        );
+
+        // Pastikan counterCode digunakan untuk membentuk queueNumber dengan benar
+        const formattedRows = rows.map(row => ({
+            ...row,
+            queueNumber: `${row.counterCode}${row.formattedQueue}` // AA001, BB001, CC001, dll.
+        }));
+
+        return formattedRows;
+    } catch (error) {
+        return h.response({ error: error.message }).code(500);
+    }
+};
+
+const handlerUpdateQueuesById = async (request, h) => {
+    const { id } = request.params;
+
+    try {
+        const [currentQueues] = await pool.execute(
+            "SELECT queueNumber FROM queues WHERE id = ?",
+            [id]
+        );
+
+        if (currentQueues.length === 0) {
+            return h.response({ error: "Data tidak ditemukan" }).code(404);
+        }
+
+        await pool.execute(
+            "UPDATE queues SET queueNumber = ? WHERE id = ?",
+            [currentQueues[0].queueNumber + 1, id]
+        );
+
+        const [updateRows] = await pool.execute(
+            "SELECT * FROM queues WHERE id = ?",
+            [id]
+        );
+
+        return h.response({ data: updateRows[0] }).code(200);
+    } catch (error) {
+       return h.response({ error: error.message }).code(500);
+    }
+};
+
+const handlerResetQueueNumber = async (request, h) => {
+    const { counterId } = request.payload;
+    try {
+        if (counterId) {
+            await pool.execute(
+                'UPDATE queues SET queueNumber = 1 WHERE id = ?',
+                [counterId]
+            );
+        } else {
+            await pool.execute(
+                'UPDATE queues SET queueNumber = 1'
+            );
+        }
+
+        const [updatedRows] = await pool.execute('SELECT * FROM queues');
+
+        return h.response(updatedRows).code(200);
+    } catch (error) {
+        return h.response({ error: error.message }).code(500);
+    }
+};
+
+const feedbackHandler = async (request, h) => {
+    try {
+        const { kritik, saran, komentar } = request.payload;
+        const { email, name } = request.auth; 
+        if (!email || !name || !kritik || !saran || !komentar) {
+            return h.response({ message: "Data tidak lengkap" }).code(400);
+          }
+
+        await pool.execute(
+            "INSERT INTO feedback (email, name, kritik, saran, komentar) VALUES (?, ?, ?, ?, ?)",
+            [email, name, kritik, saran, komentar]
+        );
+
+        return h.response({ message: 'Kritik dan saran berhasil dikirim' }).code(201);
+    } catch (error) {
+        console.error('Error in handlerKritikSaran:', error);
+        return h.response({ message: 'Internal server error' }).code(500);
+    }
+};
+
+const handlerGetAllFeedback = async (request, h) => {
+    try {
+        const [rows] = await pool.execute(
+            "SELECT * FROM feedback ORDER BY created_at DESC"
+        );
+
+        if (rows.length === 0){
+            return h.response([]).code(200);
+        }
+        return h.response(rows).code(200);
+    } catch(error) {
+        console.error(error);
+        return h.response({message: 'Internal server Error'}).code(500);
+    }
+};
+
+const handlerGetFeedbackById = async (request, h) => {
+    const { id } = request.params;
+    
+    try {
+        const [rows] = await pool.execute(
+            "SELECT * FROM feedback WHERE id = ?",
+            [id]
+        );
+
+        if (rows.length === 0){
+            return h.response({message: 'Kritik tidak ditemukan'}).code(404);
+        }
+        return h.response(rows[0]).code(200);
+    } catch(error) {
+        console.error(error);
+        return h.response({message: 'Internal server Error'}).code(500);
+    }
+};
+
+const handlerDeleteAllFeedback = async (request, h) => {
+    try {
+        await pool.execute("DELETE FROM feedback");
+        return h.response({message: 'Semua feedback berhasil dihapus'}).code(200);
+    } catch(error) {
+        console.error(error);
+        return h.response({message: 'Gagal menghapus feedback'}).code(500);
+    }
+};
+
+const handlerDeleteFeedbackById = async (request, h) => {
+    const { id } = request.params;
+    
+    try {
+        const [result] = await pool.execute(
+            "DELETE FROM feedback WHERE id = ?",
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return h.response({message: 'Feedback tidak ditemukan'}).code(404);
+        }
+
+        return h.response({message: 'Feedback berhasil dihapus'}).code(200);
+    } catch(error) {
+        console.error(error);
+        return h.response({message: 'Gagal menghapus feedback'}).code(500);
+    }
+};
+
 
 
 
 export { 
-    handlerLoginUser, 
+    verifyToken,
+    feedbackHandler,
+    handlerLoginUser,
     handlerLoginAdmin, 
     handlerSubmitReport,
+    handlerGetDataToCart,
     handlerGetAllReports,
+    handlerGetNumberQueues,
     handlerGetCrimeReports,
+    handlerDeleteAllFeedback,
+    handlerDeleteFeedbackById,
+    handlerUpdateQueuesById,
     handlerGetMissingReport,
+    handlerResetQueueNumber,
+    handlerGetAllFeedback,
+    handlerGetFeedbackById,
     handlerGetDBulyyingReport,
     handlerUpdateReportStatus,
     handlerDeleteCompliteReport,

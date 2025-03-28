@@ -269,7 +269,6 @@ const Kehilangan = () => {
                                     <th>ID</th>
                                     <th>Nama</th>
                                     <th>Email</th>
-                                    <th>Alamat</th>
                                     <th>Deskripsi</th>
                                     <th>Tanggal</th>
                                     <th>Status</th>
@@ -283,7 +282,6 @@ const Kehilangan = () => {
                                             <td>{item.id}</td>
                                             <td>{item.nama ? `${item.nama.substring(0, 10)}...` : "_"}</td>
                                             <td>{item.email ? `${item.email.substring(0, 10)}...` : "_"}</td>
-                                            <td>{item.alamat ? `${item.alamat.substring(0, 15)}...` : "-"}</td>
                                             <td>{item.deskripsi ? `${item.deskripsi.substring(0, 30)}...` : "-"}</td>
                                             <td>{item.tanggal_laporan ? item.tanggal_laporan.substring(0, 10) : "-"}</td>
                                             <td>
@@ -355,7 +353,7 @@ const Kehilangan = () => {
                                 <p><strong>ID:</strong> {selectedData.id}</p>
                                 <p><strong>Nama:</strong> {selectedData.nama}</p>
                                 <p><strong>Email:</strong> {selectedData.email}</p>
-                                <p><strong>Alamat:</strong> {selectedData.alamat || "-"}</p>
+                                <p><strong>Nomor Telepon:</strong> {selectedData.nomor_telepon || "-"}</p>
                                 <p><strong>Deskripsi:</strong> {selectedData.deskripsi || "-"}</p>
                                 <p><strong>Tanggal:</strong> {selectedData.tanggal_laporan || "-"}</p>
                                 <p>

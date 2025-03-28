@@ -21,8 +21,12 @@ import Kehilangan from './admin-page/content/content-items/Kehilangan'
 import KDRT from './admin-page/content/content-items/KDRT'
 import Bulyying from './admin-page/content/content-items/Bulyying'
 import TindakanMencurigakan from './admin-page/content/content-items/TindakanMencurigakan'
+import FeedbacKritik from './admin-page/content/content-items/Kritik'
+import FeedbackSaran from './admin-page/content/content-items/Saran'
+import Feedbackomentar from './admin-page/content/content-items/komentar'
 
 const App = () => {
+
   return (
     <GoogleOAuthProvider 
     clientId='1055181885424-f2iha2701nfhb22hugvc3pcfle4kvd7r.apps.googleusercontent.com'
@@ -41,17 +45,18 @@ const App = () => {
               <Route path="informasi-pengaduan" element={<InformasiPengaduan />}/>
               <Route path="status-pengaduan" element={<StatusPengaduan />} />
               <Route path="statistik-pengaduan" element={<StatistikPengaduan />} />
-              <Route path="informasi-tiket" element={<InformaiTiket />} />
-              <Route path="status-tiket" element={<StatusTiket />} />
-              <Route path="statistik-tiket" element={<StatistikTiket />} />
+              <Route path="status-tiket" element={<StatusTiket/>} />
               <Route path='detail-pengaduan-tindak-kejahatan' element={<TindakanKejahatan/>}/>
               <Route path='detail-pengaduan-kehilangan' element={<Kehilangan/>}/>
               <Route path='detail-pengaduan-kdrt' element={<KDRT/>}/>
               <Route path='detail-pengaduan-bulyying' element={<Bulyying/>}/>
               <Route path='detail-pengaduan-tindakan-mencurigakan' element={<TindakanMencurigakan/>}/>
+              <Route path='kritik' element={<FeedbacKritik/>}/>
+              <Route path='saran' element={<FeedbackSaran/>}/>
+              <Route path='komentar' element={<Feedbackomentar/>}/>
             </Route>
           </Route>
-          <Route path='/user/beranda' element={<UserPage/>}/>
+          <Route path='/user/beranda' element={<UserPage />}/>
           <Route path='*' element={<NotFound/>}/>
         </Routes>
       </Router>

@@ -32,8 +32,6 @@ export default function NavbarList({ isMinimize }) {
             title: 'Tiketing',
             items: [
                 {to: 'status-tiket', icon: 'bi bi-ticket-fill', label: 'Status Tiket'},
-                {to: 'informasi-tiket', icon: 'bi bi-stickies-fill', label: 'Informasi Tiket'},
-                {to: 'statistik-tiket', icon: 'bi bi-file-earmark-bar-graph-fill', label: 'Statistik Tiket'},
             ],
         },
         {

@@ -353,6 +353,7 @@ const TindakanKejahatan = () => {
                                 <p><strong>ID:</strong> {selectedData.id}</p>
                                 <p><strong>Nama:</strong> {selectedData.nama}</p>
                                 <p><strong>Email:</strong> {selectedData.email}</p>
+                                <p><strong>Nomor Telepon:</strong> {selectedData.nomor_telepon}</p>
                                 <p><strong>Alamat:</strong> {selectedData.alamat || "-"}</p>
                                 <p><strong>Deskripsi:</strong> {selectedData.deskripsi || "-"}</p>
                                 <p><strong>Tanggal:</strong> {selectedData.tanggal_laporan || "-"}</p>

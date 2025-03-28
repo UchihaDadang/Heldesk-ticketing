@@ -11,6 +11,16 @@ import {
     handlerGetDomesticViolenceReport,
     handlerGetDBulyyingReport,
     handlerGetSuspiciousActivityReport,
+    handlerGetDataToCart,
+    handlerGetNumberQueues,
+    handlerUpdateQueuesById,
+    handlerResetQueueNumber,
+    feedbackHandler,
+    verifyToken,
+    handlerGetAllFeedback,
+    handlerGetFeedbackById,
+    handlerDeleteAllFeedback,
+    handlerDeleteFeedbackById,
  } from './handler.js';
 import Joi from 'joi';
 
@@ -188,6 +198,135 @@ const routes = [
             }
         }
     },
+
+    {
+        method: "GET",
+        path: "/api/report/stats",
+        handler: handlerGetDataToCart,
+        options: {
+            auth: false,
+            cors: {
+                origin: ["http://localhost:5173"],
+                headers: ["Accept", "Content-Type", "Authorization"],
+                credentials: false
+            }
+        }
+    },
+
+    {
+        method: "GET",
+        path: "/api/ticket/queues",
+        handler: handlerGetNumberQueues,
+        options: {
+            auth: false,
+            cors: {
+                origin: ["http://localhost:5173"],
+                headers: ["Accept", "Content-Type", "Authorization"],
+                credentials: false
+            }
+        }
+    },
+
+    {
+        method: "PUT",
+        path: "/api/ticket/queues/{id}",
+        handler: handlerUpdateQueuesById,
+        options: {
+            auth: false,
+            cors: {
+                origin: ["http://localhost:5173"],
+                headers: ["Accept", "Content-Type", "Authorization"],
+                credentials: false
+            }
+        }
+    },
+
+    {
+        method: "PUT",
+        path: "/api/ticket/queues/reset",
+        handler: handlerResetQueueNumber,
+        options: {
+            auth: false,
+            cors: {
+                origin: ["http://localhost:5173"],
+                headers: ["Accept", "Content-Type", "Authorization"],
+                credentials: false
+            }
+        }
+    },
+
+    {
+        method: "POST",
+        path: "/api/feedback",
+        handler: feedbackHandler,
+        options: {
+            pre: [{ method: verifyToken }],
+            auth: false,
+            cors: {
+                origin: ["http://localhost:5173"],
+                headers: ["Accept", "Content-Type", "Authorization"],
+                credentials: false
+            }
+        }
+    },
+
+    {
+        method: "GET",
+        path: "/api/feedback",
+        handler: handlerGetAllFeedback,
+        options: {
+            auth: false,
+            cors: {
+                origin: ["http://localhost:5173"],
+                headers: ["Accept", "Content-Type", "Authorization"],
+                credentials: false
+            }
+        }
+    },
+
+    {
+        method: "GET",
+        path: "/api/feedback/{id}",
+        handler: handlerGetFeedbackById,
+        options: {
+            auth: false,
+            cors: {
+                origin: ["http://localhost:5173"],
+                headers: ["Accept", "Content-Type", "Authorization"],
+                credentials: false
+            }
+        }
+    },
+
+    {
+        method: "DELETE",
+        path: "/api/feedback",
+        handler: handlerDeleteAllFeedback,
+        options: {
+            auth: false,
+            cors: {
+                origin: ["http://localhost:5173"],
+                headers: ["Accept", "Content-Type", "Authorization"],
+                credentials: false
+            }
+        }
+    },
+
+    {
+        method: "DELETE",
+        path: "/api/feedback/{id}",
+        handler: handlerDeleteFeedbackById,
+        options: {
+            auth: false,
+            cors: {
+                origin: ["http://localhost:5173"],
+                headers: ["Accept", "Content-Type", "Authorization"],
+                credentials: false
+            }
+        }
+}
+
+    
     
     
    

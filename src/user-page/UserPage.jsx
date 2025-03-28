@@ -1,12 +1,36 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Container, Row, Col, Card, Button, Navbar, Nav, Modal, Form } from "react-bootstrap";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 const UserPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState(null);
+  const [feedbackData, setFeedbackData] = useState({ kritik: "", saran: "", komentar: "" });
+  const [user, setUser] = useState(null);
   const [formData, setFormData] = useState({});
   const sliderRef = useRef(null);
+  const [queues, setQueues] = useState([]);
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/ticket/queues');
+      if (response.data){
+        setQueues(response.data);
+      } else {
+        throw new Error('Data tidak ditemukan');
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    };
+};
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const features = [
     {
@@ -45,15 +69,6 @@ const UserPage = () => {
       description: "Berikan kritik dan saran anda untuk meningkatkan fungsionalitas sistem",
       fields: ["Kritik", "Saran", "Komentar"]
     }
-  ];
-
-  const queueData = [
-    { id: 1, title: "Loket 1", queueNumber: "A001" },
-    { id: 2, title: "Loket 2", queueNumber: "B045" },
-    { id: 3, title: "Loket 3", queueNumber: "C012" },
-    { id: 4, title: "Loket 4", queueNumber: "D023" },
-    { id: 5, title: "Loket 5", queueNumber: "E007" },
-    { id: 6, title: "Loket 6", queueNumber: "F019" },
   ];
 
   const handleShowModal = (feature) => {
@@ -112,6 +127,54 @@ const UserPage = () => {
     }
   };
 
+  useEffect(() => {
+    const token = localStorage.getItem("userToken");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token); 
+        setUser(decoded); 
+      } catch (error) {
+        console.error("Token tidak valid", error);
+        localStorage.removeItem("userToken");
+      }
+    }
+  }, []);
+
+  const handleFeedbackChange = (e) => {
+    const { name, value } = e.target;
+    setFeedbackData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleFeedbackSubmit = async () => {
+    const token = localStorage.getItem("userToken");
+
+    if (!token || !user) {
+      alert("Anda harus login terlebih dahulu");
+      return;
+    }
+
+    try {
+      const completeData = {
+        ...feedbackData,
+        user_id: user.id, 
+        email: user.email,
+        name: user.name,
+      };
+
+      await axios.post("http://localhost:3000/api/feedback", completeData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      alert("Feedback berhasil dikirim");
+      setFeedbackData({ kritik: "", saran: "", komentar: "" }); 
+    } catch (error) {
+      console.error("Gagal mengirim feedback", error);
+      alert("Gagal mengirim feedback");
+    }
+  };
+  
   return (
     <div className="d-flex flex-column" style={{ minHeight: "100vh" }}>
       <Navbar expand="lg" fixed="top" className="w-100">
@@ -153,27 +216,27 @@ const UserPage = () => {
         </Container>
 
         <Container className="my-5">
-          <h2 className="text-center mb-4">Informasi Nomor Antrian</h2>
+        <h2 className="text-center mb-4">Informasi Nomor Antrian</h2>
 
-          <div className="position-relative">
-            <Button
-              variant="light"
-              className="position-absolute top-50 start-0 translate-middle-y rounded-circle shadow"
-              onClick={() => sliderRef.current.scrollBy({ left: -300, behavior: "smooth" })}
-              style={{
-                width: "40px",
-                height: "40px",
-                zIndex: 1,
-                padding: "0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginLeft: "-20px",
-              }}
-            >&lt;
-            </Button>
+        <div className="position-relative">
+          <Button
+            variant="light"
+            className="position-absolute top-50 start-0 translate-middle-y rounded-circle shadow"
+            onClick={() => sliderRef.current.scrollBy({ left: -300, behavior: "smooth" })}
+            style={{
+              width: "40px",
+              height: "40px",
+              zIndex: 1,
+              padding: "0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginLeft: "-20px",
+            }}
+          >&lt;
+          </Button>
 
-            <div
+          <div
               ref={sliderRef}
               className="d-flex overflow-auto pb-3"
               style={{
@@ -183,7 +246,7 @@ const UserPage = () => {
                 gap: "15px",
               }}
             >
-              {queueData.map((queue) => (
+              {queues.map((queue) => (
                 <Card
                   key={queue.id}
                   className="flex-shrink-0"
@@ -205,23 +268,65 @@ const UserPage = () => {
               ))}
             </div>
 
-            <Button
-              variant="light"
-              className="position-absolute top-50 end-0 translate-middle-y z-index-1 rounded-circle shadow"
-              onClick={() => sliderRef.current.scrollBy({ left: 300, behavior: "smooth" })}
-              style={{
-                width: "40px",
-                height: "40px",
-                padding: "0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: "-20px",
-              }}
-            >&gt;
-            </Button>
-          </div>
-        </Container>
+          <Button
+            variant="light"
+            className="position-absolute top-50 end-0 translate-middle-y z-index-1 rounded-circle shadow"
+            onClick={() => sliderRef.current.scrollBy({ left: 300, behavior: "smooth" })}
+            style={{
+              width: "40px",
+              height: "40px",
+              padding: "0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: "-20px",
+            }}
+          >&gt;
+          </Button>
+        </div>
+      </Container>
+
+      <Container className="mt-5">
+        <h2 className="text-center mb-4">Berikan Kritik, Saran, dan Komentar</h2>
+        <Form>
+          <Form.Group className="mb-3">
+            <Form.Label>Kritik</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              name="kritik"
+              value={feedbackData.kritik}
+              onChange={handleFeedbackChange}
+              placeholder="Masukkan kritik Anda"
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Saran</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              name="saran"
+              value={feedbackData.saran}
+              onChange={handleFeedbackChange}
+              placeholder="Masukkan saran Anda"
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Komentar</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              name="komentar"
+              value={feedbackData.komentar}
+              onChange={handleFeedbackChange}
+              placeholder="Masukkan komentar Anda"
+            />
+          </Form.Group>
+          <Button variant="primary" onClick={handleFeedbackSubmit}>
+            Kirim Masukan
+          </Button>
+        </Form>
+      </Container>
       </main>
 
       <Modal
